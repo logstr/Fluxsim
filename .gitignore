@@ -1,0 +1,14 @@
+.DS_Store
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+bind_logs/
+dns_config/db.*.zone
+dns_config/flux_agents_*.txt
+dns_config/resolv.dns_client.conf
+docker-compose.yml
+monitoring/registry.json

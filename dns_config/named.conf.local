@@ -1,0 +1,5 @@
+zone "sim.local" IN {
+    type master;
+    file "/etc/bind/db.sim.local.zone";
+    allow-update { none; };
+};

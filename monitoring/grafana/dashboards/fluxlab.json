@@ -1,0 +1,189 @@
+{
+  "title": "FluxLab – FastFlux & Network Health (Advanced)",
+  "uid": "fluxlab-advanced",
+  "timezone": "",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "net",
+        "type": "query",
+        "datasource": null,
+        "query": "label_values(fluxlab_network_up, net)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true,
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] }
+      },
+      {
+        "name": "fqdn",
+        "type": "query",
+        "datasource": null,
+        "query": "label_values(fluxlab_dns_answers{net=~\"$net\"}, fqdn)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true,
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Overview",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 }
+    },
+
+    {
+      "type": "stat",
+      "title": "Networks Up",
+      "targets": [{ "expr": "sum(fluxlab_network_up{net=~\"$net\"})" }],
+      "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 }
+    },
+    {
+      "type": "stat",
+      "title": "Domains Resolving",
+      "targets": [{ "expr": "sum(fluxlab_dns_up{net=~\"$net\", fqdn=~\"$fqdn\"})" }],
+      "gridPos": { "x": 4, "y": 1, "w": 4, "h": 4 }
+    },
+    {
+      "type": "stat",
+      "title": "Avg TTL (s)",
+      "targets": [{ "expr": "avg(fluxlab_dns_ttl_hint{net=~\"$net\"})" }],
+      "gridPos": { "x": 8, "y": 1, "w": 4, "h": 4 }
+    },
+    {
+      "type": "stat",
+      "title": "Suspected Fast-Flux (score > 0.6)",
+      "targets": [{
+        "expr": "sum(\n  ((fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"} > 5) * 0.4)\n+ ((fluxlab_dns_ttl_hint{net=~\"$net\"} < 120) * 0.3)\n+ ((changes(fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"}[10m]) > 3) * 0.3)\n> 0.6\n)"
+      }],
+      "gridPos": { "x": 12, "y": 1, "w": 6, "h": 4 },
+      "options": { "reduceOptions": { "fields": "", "calcs": ["lastNotNull"], "values": false } }
+    },
+    {
+      "type": "stat",
+      "title": "HTTP Targets Up",
+      "targets": [{ "expr": "sum(fluxlab_http_up{net=~\"$net\"})" }],
+      "gridPos": { "x": 18, "y": 1, "w": 6, "h": 4 }
+    },
+
+    {
+      "type": "row",
+      "title": "DNS Dynamics",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 1 }
+    },
+
+    {
+      "type": "timeseries",
+      "title": "A-Record Count per FQDN (answers)",
+      "targets": [{
+        "expr": "fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"}",
+        "legendFormat": "{{net}} {{fqdn}}"
+      }],
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 7 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Answer-Set Churn (changes over 10m)",
+      "targets": [{
+        "expr": "changes(fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"}[10m])",
+        "legendFormat": "churn {{net}} {{fqdn}}"
+      }],
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 7 }
+    },
+    {
+      "type": "timeseries",
+      "title": "TTL Hint by Network",
+      "targets": [{
+        "expr": "fluxlab_dns_ttl_hint{net=~\"$net\"}",
+        "legendFormat": "TTL {{net}}"
+      }],
+      "gridPos": { "x": 0, "y": 13, "w": 8, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "DNS Resolution Success",
+      "targets": [{
+        "expr": "avg(fluxlab_dns_up{net=~\"$net\", fqdn=~\"$fqdn\"})",
+        "legendFormat": "dns_up {{net}} {{fqdn}}"
+      }],
+      "gridPos": { "x": 8, "y": 13, "w": 8, "h": 6 }
+    },
+    {
+      "type": "bargauge",
+      "title": "Current A-Record Count (Top by FQDN)",
+      "targets": [{
+        "expr": "topk(10, fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"})",
+        "legendFormat": "{{fqdn}}"
+      }],
+      "gridPos": { "x": 16, "y": 13, "w": 8, "h": 6 }
+    },
+
+    {
+      "type": "row",
+      "title": "Transport & Capacity",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 19, "w": 24, "h": 1 }
+    },
+
+    {
+      "type": "timeseries",
+      "title": "HTTP Reachability (by net)",
+      "targets": [{
+        "expr": "fluxlab_http_up{net=~\"$net\"}",
+        "legendFormat": "{{net}} → {{target}}"
+      }],
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 7 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Agent/Edge/Worker Capacity",
+      "targets": [
+        { "expr": "fluxlab_flux_agents{net=~\"$net\"}", "legendFormat": "agents {{net}}" },
+        { "expr": "fluxlab_cdn_edges{net=~\"$net\"}", "legendFormat": "edges {{net}}" },
+        { "expr": "fluxlab_lb_workers{net=~\"$net\"}", "legendFormat": "workers {{net}}" }
+      ],
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 7 }
+    },
+
+    {
+      "type": "row",
+      "title": "Suspect Domains",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 27, "w": 24, "h": 1 }
+    },
+
+    {
+      "type": "table",
+      "title": "Top Suspects (score, answers, churn, TTL)",
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": {}, "indexByName": {} } }
+      ],
+      "targets": [
+        {
+          "expr": "(\n  ((fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"} > 5) * 0.4)\n+ ((fluxlab_dns_ttl_hint{net=~\"$net\"} < 120) * 0.3)\n+ ((changes(fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"}[10m]) > 3) * 0.3)\n) > bool 0",
+          "legendFormat": "score {{net}} {{fqdn}}"
+        },
+        {
+          "expr": "fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"}",
+          "legendFormat": "answers {{net}} {{fqdn}}"
+        },
+        {
+          "expr": "changes(fluxlab_dns_answers{net=~\"$net\", fqdn=~\"$fqdn\"}[10m])",
+          "legendFormat": "churn10m {{net}} {{fqdn}}"
+        },
+        {
+          "expr": "fluxlab_dns_ttl_hint{net=~\"$net\"}",
+          "legendFormat": "ttl {{net}}"
+        }
+      ],
+      "options": { "showHeader": true },
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 8 }
+    }
+  ]
+}

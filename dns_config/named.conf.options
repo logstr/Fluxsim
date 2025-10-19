@@ -1,0 +1,21 @@
+options {
+    directory "/var/cache/bind";
+    listen-on { any; };
+    listen-on-v6 { none; };
+    allow-query { any; };
+    recursion no;
+    dnssec-validation no;   // <- quiets DS/DNSSEC fetches in closed sims
+    forwarders { 8.8.8.8; };
+    dump-file "/var/cache/bind/cache_dump.db";
+};
+
+logging {
+    channel query_log {
+        file "/var/log/named/query.log" versions 5 size 10m;
+        severity info;
+        print-time yes;
+        print-category yes;
+        print-severity yes;
+    };
+    category queries { query_log; };
+};

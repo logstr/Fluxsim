@@ -1,0 +1,23 @@
+# Dockerfile.dns
+FROM alpine:latest
+
+RUN apk update && apk add --no-cache \
+      bind \
+      bind-tools \
+      bash \
+      coreutils \
+      procps \
+  && rm -rf /var/cache/apk/* \
+  && mkdir -p /etc/bind /var/cache/bind /var/run/named \
+  && chown -R root:named /etc/bind /var/cache/bind /var/run/named \
+  && chmod 775 /var/cache/bind
+
+# Copy an entrypoint that validates then starts named in foreground
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 53/udp 53/tcp
+WORKDIR /etc/bind
+
+# IMPORTANT: run foreground daemon with validation first
+CMD ["/usr/local/bin/docker-entrypoint.sh"]

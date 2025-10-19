@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FluxLab Content Portal</title>
+<style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #14213d 0%, #0a0f1f 45%, #030712 100%);
+      color: #f8fafc;
+      overflow: hidden;
+      padding: 48px 24px;
+      transition: background 1s ease;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: conic-gradient(from 90deg at 50% 50%, rgba(59,130,246,0.25), rgba(244,114,182,0.15), rgba(56,189,248,0.25), rgba(147,51,234,0.2));
+      filter: blur(120px);
+      opacity: 0.6;
+      animation: pulse 12s linear infinite;
+      z-index: -2;
+    }
+    @keyframes pulse {
+      0% { transform: rotate(0deg) scale(1); opacity: 0.55; }
+      50% { transform: rotate(180deg) scale(1.05); opacity: 0.8; }
+      100% { transform: rotate(360deg) scale(1); opacity: 0.55; }
+    }
+    .container {
+      width: min(880px, 100%);
+      background: rgba(15, 23, 42, 0.82);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 30px 90px -35px rgba(15, 118, 255, 0.7);
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+    .container::after {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.25);
+      pointer-events: none;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #f8fafc;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    h1 {
+      margin: 20px 0 8px;
+      font-size: 2.25rem;
+      line-height: 1.15;
+      color: #38bdf8;
+    }
+    p {
+      color: #cbd5f5;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin: 12px 0;
+    }
+    .identity {
+      margin-top: 30px;
+      padding: 16px 20px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: 0.95rem;
+    }
+    .identity strong {
+      color: #f8fafc;
+    }
+    .campaign {
+      margin-top: 24px;
+      padding: 18px 24px;
+      border-left: 4px solid #f472b6;
+      background: rgba(244, 114, 182, 0.08);
+      border-radius: 12px;
+    }
+    .campaign h2 {
+      margin: 0 0 8px;
+      color: #f472b6;
+      font-size: 1.3rem;
+    }
+    .footer {
+      margin-top: 28px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+      font-weight: 600;
+      margin-top: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      transition: background 0.5s ease, border 0.5s ease, color 0.5s ease;
+    }
+    .glow {
+      position: absolute;
+      inset: -30%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.22), transparent 65%);
+      filter: blur(40px);
+      z-index: -1;
+      opacity: 0;
+      animation: glowIn 1.8s ease forwards;
+    }
+    @keyframes glowIn {
+      to { opacity: 1; }
+    }
+    .identity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+    .identity-callout {
+      margin-top: 28px;
+      padding: 18px 22px;
+      border-radius: 16px;
+      background: rgba(15, 118, 255, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-align: center;
+      transition: background 0.6s ease, border 0.6s ease;
+    }
+    .identity-callout span {
+      display: block;
+      font-size: 0.75rem;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 6px;
+    }
+    .identity-card {
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 16px;
+      padding: 16px 18px;
+      font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      position: relative;
+      overflow: hidden;
+    }
+    .identity-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid transparent;
+    }
+    .identity-card span {
+      display: block;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .identity-card strong {
+      color: #f8fafc;
+      font-size: 1.05rem;
+      word-break: break-all;
+    }
+    .campaign {
+      margin-top: 24px;
+      padding: 20px 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(244, 114, 182, 0.4);
+      background: linear-gradient(135deg, rgba(244, 114, 182, 0.18), rgba(14, 165, 233, 0.12));
+      box-shadow: 0 12px 40px -20px rgba(244, 114, 182, 0.5);
+      transition: transform 0.6s ease;
+    }
+    .campaign.hidden { display: none; }
+    .campaign h2 {
+      margin: 0 0 10px;
+      color: #f9a8d4;
+      font-size: 1.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .metric-ring {
+      margin-top: 22px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 2px solid rgba(148, 163, 184, 0.3);
+      display: grid;
+      place-items: center;
+      position: relative;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 10px;
+    }
+    .ring::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      border: 2px dashed rgba(148,163,184,0.25);
+      animation: rotate 10s linear infinite;
+    }
+    @keyframes rotate {
+      to { transform: rotate(360deg); }
+    }
+    .trend {
+      margin-top: 24px;
+      font-size: 0.9rem;
+      color: #cbd5f5;
+      opacity: 0.9;
+    }
+    body.role-origin { background: radial-gradient(circle at top, #0f172a 0%, #020617 100%); }
+    body.role-origin .glow { background: radial-gradient(circle, rgba(56,189,248,0.35), transparent 70%); }
+    body.role-origin .role-badge { background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc; }
+    body.role-flux { background: radial-gradient(circle at top, #0f172a 0%, #1c0f3a 50%, #030712 100%); }
+    body.role-flux .glow { background: radial-gradient(circle, rgba(244,114,182,0.35), transparent 65%); }
+    body.role-flux .role-badge { background: rgba(244, 114, 182, 0.12); border-color: rgba(244, 114, 182, 0.35); color: #f9a8d4; }
+    body.role-cdn { background: radial-gradient(circle at top, #042f2e 0%, #0f172a 65%, #020617 100%); }
+    body.role-cdn .glow { background: radial-gradient(circle, rgba(34,211,238,0.38), transparent 65%); }
+    body.role-cdn .role-badge { background: rgba(34,211,238,0.12); border-color: rgba(34,211,238,0.35); color: #99f6e4; }
+    body.role-load-balancer { background: radial-gradient(circle at top, #1e1b4b 0%, #0f172a 65%, #020617 100%); }
+    body.role-load-balancer .glow { background: radial-gradient(circle, rgba(129,140,248,0.35), transparent 70%); }
+    body.role-load-balancer .role-badge { background: rgba(129,140,248,0.14); border-color: rgba(129,140,248,0.35); color: #c7d2fe; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="glow"></div>
+    <span class="tag">Flux Simulation</span>
+    <h1 id="title">Interactive Origin</h1>
+    <p id="blurb">
+      This content hub powers the FluxLab scenario. Requests may arrive directly or via rotating
+      infrastructure (fast flux proxies, CDN edges, or load balancers). Use the live identity panel
+      below to confirm where you actually landed.
+    </p>
+
+    <div class="role-badge" id="roleBadge">Detecting role…</div>
+
+    <div class="identity-callout" id="ipCallout">
+      <span>Resolving Host IP</span>
+      <div id="ipCalloutValue">pending…</div>
+    </div>
+
+    <div class="identity-grid" id="identityGrid">
+      <div class="identity-card">
+        <span>Server Hostname</span>
+        <strong id="hostnameValue">resolving…</strong>
+      </div>
+      <div class="identity-card">
+        <span>Listening IP</span>
+        <strong id="ipValue">resolving…</strong>
+      </div>
+      <div class="identity-card">
+        <span>Client Address</span>
+        <strong id="clientValue">resolving…</strong>
+      </div>
+      <div class="identity-card">
+        <span>Additional Detail</span>
+        <strong id="extraValue">resolving…</strong>
+      </div>
+    </div>
+
+    <div class="metric-ring">
+      <div class="ring">
+        <div>Flux TTL</div>
+        <div id="ttlValue">--</div>
+      </div>
+      <div class="ring">
+        <div>Proxy Upstream</div>
+        <div id="upstreamValue">--</div>
+      </div>
+      <div class="ring">
+        <div>Campaign Signal</div>
+        <div id="campaignValue">--</div>
+      </div>
+    </div>
+
+    <div class="campaign hidden" id="campaign">
+      <h2>Active Fast-Flux Campaign</h2>
+      <p>
+        You hit a disposable proxy node that fronts the malicious payload. Operators rotate these
+        agents frequently to evade takedowns. Track the surfaced IP address and TTL behavior to
+        correlate with command infrastructure.
+      </p>
+    </div>
+
+    <div class="trend" id="trend">
+      Sampling live telemetry… stand by.
+    </div>
+
+    <div class="footer">
+      <span>Simulation Network • Fast Flux &amp; Defensive Analytics</span>
+      <span id="timestamp"></span>
+    </div>
+  </div>
+
+  <script>
+    (async () => {
+      const badgeEl = document.getElementById("roleBadge");
+      const campaignEl = document.getElementById("campaign");
+      const titleEl = document.getElementById("title");
+      const blurbEl = document.getElementById("blurb");
+      const timestampEl = document.getElementById("timestamp");
+      const hostnameEl = document.getElementById("hostnameValue");
+      const ipEl = document.getElementById("ipValue");
+      const ipCalloutEl = document.getElementById("ipCalloutValue");
+      const clientEl = document.getElementById("clientValue");
+      const extraEl = document.getElementById("extraValue");
+      const ttlEl = document.getElementById("ttlValue");
+      const upstreamEl = document.getElementById("upstreamValue");
+      const campaignValueEl = document.getElementById("campaignValue");
+      const trendEl = document.getElementById("trend");
+
+      const updateTimestamp = () => {
+        timestampEl.textContent = new Date().toLocaleString();
+      };
+      updateTimestamp();
+      setInterval(updateTimestamp, 1000 * 30);
+
+      try {
+        const res = await fetch("/whoami", { cache: "no-store" });
+        if (!res.ok) throw new Error("whoami endpoint unavailable");
+        const info = await res.json();
+
+        const ip = info.server_addr || "unknown";
+        const role = (info.role || "origin").toLowerCase();
+        const host = info.hostname || "n/a";
+        const region = info.region ? `Region: ${info.region}` : "";
+
+        document.body.classList.remove("role-origin", "role-flux", "role-cdn", "role-load-balancer");
+        const roleClass = role.includes("flux")
+          ? "role-flux"
+          : role.includes("cdn")
+          ? "role-cdn"
+          : role.includes("load-balancer")
+          ? "role-load-balancer"
+          : "role-origin";
+        document.body.classList.add(roleClass);
+
+        badgeEl.textContent = role.replace("-", " ");
+
+        hostnameEl.textContent = host;
+        ipEl.textContent = ip;
+        ipCalloutEl.textContent = ip;
+        clientEl.textContent = info.remote_addr || "n/a";
+        extraEl.textContent = info.upstream || region || "—";
+        ttlEl.textContent = info.ttl_hint ? `${info.ttl_hint}s` : "—";
+        upstreamEl.textContent = info.upstream || (role.includes("origin") ? "self" : "resolving…");
+        campaignValueEl.textContent = role.includes("flux") ? "ACTIVE" : role.includes("cdn") ? "Distributing" : "Calm";
+        trendEl.textContent = role.includes("flux")
+          ? "Flux proxies rotate often—monitor TTL changes and A-record churn."
+          : role.includes("cdn")
+          ? "CDN edges serve cached assets close to clients."
+          : role.includes("load-balancer")
+          ? "Load balancer allocates traffic; inspect upstream workers for variance."
+          : "Origin responding directly; ensure defensive monitoring is engaged.";
+
+        if (role.includes("flux")) {
+          titleEl.textContent = "Flux Proxy Landing Page";
+          blurbEl.textContent =
+            "You are viewing content through a rotating flux proxy. Monitor the IP block below to observe the churn and correlate with DNS responses.";
+          campaignEl.classList.remove("hidden");
+        } else if (role.includes("cdn")) {
+          titleEl.textContent = "CDN Edge Delivery";
+          blurbEl.textContent =
+            "This edge node fans out global traffic while shielding the origin. Multiple IPs should answer for this hostname in DNS lookups.";
+          campaignEl.classList.add("hidden");
+        } else if (role.includes("load-balancer")) {
+          titleEl.textContent = "Load Balancer Front End";
+          blurbEl.textContent =
+            "Traffic is being distributed across worker nodes. Compare repeated requests to watch round-robin or ip-hash strategies in action.";
+          campaignEl.classList.add("hidden");
+        } else {
+          titleEl.textContent = "Origin Server Content";
+          blurbEl.textContent =
+            "You are speaking directly to the origin infrastructure. Capture the headers to confirm this is not a relay.";
+          campaignEl.classList.add("hidden");
+        }
+      } catch (err) {
+        badgeEl.textContent = "identity error";
+        trendEl.textContent = `Unable to resolve server identity: ${err}`;
+      }
+    })();
+  </script>
+</body>
+</html>

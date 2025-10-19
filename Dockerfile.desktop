@@ -1,0 +1,9 @@
+FROM lscr.io/linuxserver/webtop:ubuntu-xfce
+
+USER root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dnsutils curl iproute2 procps && \
+    rm -rf /var/lib/apt/lists/*
+
+USER root

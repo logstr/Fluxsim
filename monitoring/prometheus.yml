@@ -1,0 +1,55 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # 1) Your existing exporter (kept as-is)
+  - job_name: "fluxlab_exporter"
+    static_configs:
+      - targets: ["fluxlab_exporter:9108"]
+
+  # 2) Prometheus scraping itself (good for uptime/health)
+  # If you run this config inside the Prometheus container (which you do),
+  # "localhost:9090" is correct. Alternatively use the service name:
+  #   - targets: ["fluxlab_prometheus:9090"]
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # 3) Redpanda (Kafka-compatible) metrics
+  # Redpanda exposes Prometheus metrics on the admin port (default 9644)
+  # Adjust hostname to your service/container name (e.g., ffl-redpanda)
+  - job_name: "redpanda_public"
+    metrics_path: /public_metrics
+    scrape_interval: 30s
+    scrape_timeout: 30s
+    static_configs:
+      - targets: ["redpanda:9644"]
+
+  # 4) OPTIONAL: Grafana metrics (disabled by default)
+  # To enable, set in your Grafana service:
+  #   GF_METRICS_ENABLED=true
+  #   GF_METRICS_BASIC_AUTH_USERNAME=admin
+  #   GF_METRICS_BASIC_AUTH_PASSWORD=fluxlab
+  # Then uncomment this job (and the 'basic_auth' block if enabled).
+  # - job_name: "grafana"
+  #   metrics_path: /metrics
+  #   static_configs:
+  #     - targets: ["fluxlab_grafana:3000"]
+  #   # basic_auth:
+  #   #   username: admin
+  #   #   password: fluxlab
+
+  # 5) OPTIONAL: Postgres — requires a postgres_exporter sidecar
+  # Add a service like:
+  #   postgres_exporter:
+  #     image: prometheuscommunity/postgres-exporter:latest
+  #     environment:
+  #       DATA_SOURCE_NAME: postgresql://ffl:fflpass@postgres:5432/ffldb?sslmode=disable
+  #     networks: [ "soc_net" ]
+  #
+  # Then uncomment this job:
+  # - job_name: "postgres"
+  #   static_configs:
+  #     - targets: ["postgres_exporter:9187"]

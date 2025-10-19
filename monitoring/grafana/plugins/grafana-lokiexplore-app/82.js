@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkgrafana_lokiexplore_app=self.webpackChunkgrafana_lokiexplore_app||[]).push([[82],{5082:(e,n,l)=>{l.r(n),l.d(n,{default:()=>p});var a=l(5959),r=l.n(a),t=l(5953);const o=(0,a.lazy)(()=>Promise.all([l.e(854),l.e(944),l.e(279),l.e(328),l.e(919)]).then(l.bind(l,6919))),s=r().createContext(null);class u extends r().PureComponent{componentDidMount(){t.v.info("Plugin loaded successfully")}render(){return r().createElement(s.Provider,{value:this.props},r().createElement(o,null))}}const p=u}}]);
+//# sourceMappingURL=82.js.map?_cache=1375d9d7cb48787feca8

@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dnsutils curl iproute2 procps lynx && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir jupyterlab pandas matplotlib requests
+
+ENV WORKDIR=/workspace
+RUN mkdir -p ${WORKDIR} && chown -R root:root ${WORKDIR}
+WORKDIR ${WORKDIR}
+
+COPY scripts/start_client.sh /usr/local/bin/start_client.sh
+RUN chmod +x /usr/local/bin/start_client.sh
+
+EXPOSE 8888
+
+CMD ["/usr/local/bin/start_client.sh"]
