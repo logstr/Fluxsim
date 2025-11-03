@@ -7,47 +7,47 @@ Hash: SHA512
   "signedByOrg": "grafana",
   "signedByOrgName": "Grafana Labs",
   "plugin": "grafana-pyroscope-app",
-  "version": "1.10.1",
-  "time": 1760002649857,
+  "version": "1.11.0",
+  "time": 1761214900006,
   "keyId": "7e4d0c6a708866e7",
   "files": {
-    "LICENSE": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+    "944c737f589d02ecf603.svg": "a0c8acbcf5685a8950ce1c67722579dc745585fb0d668ce965327955e5e829ff",
+    "plugin.json": "b1a9e25337a82086bc874fd1afce256b9d91fd85b670cbb56f1d92a76cdb7a32",
+    "133.js": "d36df7a33fc119c068f6126717831cabc236a7580e466f8ccf5bbebb30ba1b66",
+    "module.js": "c365500c950432eeb37ad3f22d9beac3b721fc1a179a1964153b9cb2203ba903",
     "shared/infrastructure/profile-metrics/profile-metrics.json": "2989d3bedd209ccae3f822934be696b9579a539a3254374e4b97ecceee4a7bb9",
-    "CHANGELOG.md": "2cd1efa2100630cc8ad02af277bec8a18c34379961d549055d2ab7ab69d2fdc8",
-    "plugin.json": "3143af4af5669746addee4b8f3a45b3cd312b4a4eb58d630f386f536aa2bad80",
-    "373.js.LICENSE.txt": "84798babe5a84ee41efdf41174af68e377c212b027183ecdd830747793156ded",
+    "LICENSE": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+    "module.js.map": "7e77db02f29a75b5fd1df36e94d67046999d1d0c58754e88d0dd1bbb28f206f5",
+    "908.js": "bd45e62749f5fbdfa2866f5582e4e33be80e26fb8f3f9af38e8abb2ddbc233f8",
+    "e6c722427cfa8715e19d.svg": "559341996765c2d5639a2818d76bcd88ffe252212193a573f2f9f77dae5064dd",
+    "e79edcfbe2068fae2364.svg": "89ea40b6dcf2dc8dfe146f8acac42b604e4d3c3dad03e539551d58a21f80654d",
+    "908.js.LICENSE.txt": "84798babe5a84ee41efdf41174af68e377c212b027183ecdd830747793156ded",
+    "908.js.map": "5df76417b3471521932cfb0a2a51b17bcaf78b9d726c418460a0b1156c15e80e",
+    "CHANGELOG.md": "4e04f7120fcfbd14cfede4ef12371e0aee4b8ef3c3455971256e85ca8daaad51",
+    "img/logo.svg": "559341996765c2d5639a2818d76bcd88ffe252212193a573f2f9f77dae5064dd",
+    "img/58f0b0e1cfa063e4b662.png": "87598baf93192a8dc7ee923e0af6a0c5e4b3359b00b7391fc9530108feb7aac0",
+    "img/hero-image.png": "87598baf93192a8dc7ee923e0af6a0c5e4b3359b00b7391fc9530108feb7aac0",
+    "img/diff-view-how-to.gif": "72afdd2fcad33e13db33af765a3fae9528315d78391684190dd23e40bd688852",
+    "img/decrease-latency.png": "f626933745990d2fef3d90e995f38d5e28e4754c002cf031379db7588c8fd70c",
+    "img/9c9cdd5175734d579007.png": "ab65c374d22c5faad274f6b8b2ab00bf404bb988803f09d375326cd692fce821",
+    "img/bafee50693eb02088442.png": "66d5311c4ca898cdae2d0a23a414f04a7c49052f0035c1a2906b9e9bb15d628d",
+    "img/8cdf4d2e2df8326311ab.gif": "72afdd2fcad33e13db33af765a3fae9528315d78391684190dd23e40bd688852",
+    "img/resolve-incidents.png": "66d5311c4ca898cdae2d0a23a414f04a7c49052f0035c1a2906b9e9bb15d628d",
+    "img/reduce-costs.png": "ab65c374d22c5faad274f6b8b2ab00bf404bb988803f09d375326cd692fce821",
+    "img/61b4cf746a6f58780f27.png": "f626933745990d2fef3d90e995f38d5e28e4754c002cf031379db7588c8fd70c",
+    "README.md": "9808cbc6131d2512117f366e51f5ede7aeea5b73a852f0763ba2d05ce7334dd0",
     "pages/ProfilesExplorerView/components/SceneByVariableRepeaterGrid/components/SceneEmptyState/ui/img/grot-404-dark.svg": "a0c8acbcf5685a8950ce1c67722579dc745585fb0d668ce965327955e5e829ff",
     "pages/ProfilesExplorerView/components/SceneByVariableRepeaterGrid/components/SceneEmptyState/ui/img/grot-404-light.svg": "89ea40b6dcf2dc8dfe146f8acac42b604e4d3c3dad03e539551d58a21f80654d",
-    "img/logo.svg": "559341996765c2d5639a2818d76bcd88ffe252212193a573f2f9f77dae5064dd",
-    "img/reduce-costs.png": "ab65c374d22c5faad274f6b8b2ab00bf404bb988803f09d375326cd692fce821",
-    "img/hero-image.png": "87598baf93192a8dc7ee923e0af6a0c5e4b3359b00b7391fc9530108feb7aac0",
-    "img/9c9cdd5175734d579007.png": "ab65c374d22c5faad274f6b8b2ab00bf404bb988803f09d375326cd692fce821",
-    "img/resolve-incidents.png": "66d5311c4ca898cdae2d0a23a414f04a7c49052f0035c1a2906b9e9bb15d628d",
-    "img/8cdf4d2e2df8326311ab.gif": "72afdd2fcad33e13db33af765a3fae9528315d78391684190dd23e40bd688852",
-    "img/decrease-latency.png": "f626933745990d2fef3d90e995f38d5e28e4754c002cf031379db7588c8fd70c",
-    "img/58f0b0e1cfa063e4b662.png": "87598baf93192a8dc7ee923e0af6a0c5e4b3359b00b7391fc9530108feb7aac0",
-    "img/diff-view-how-to.gif": "72afdd2fcad33e13db33af765a3fae9528315d78391684190dd23e40bd688852",
-    "img/bafee50693eb02088442.png": "66d5311c4ca898cdae2d0a23a414f04a7c49052f0035c1a2906b9e9bb15d628d",
-    "img/61b4cf746a6f58780f27.png": "f626933745990d2fef3d90e995f38d5e28e4754c002cf031379db7588c8fd70c",
-    "module.js": "0b1e84005efbca1c819d344a86d9c7bb19e2dad7400c999b87536cb38755b1bc",
-    "944c737f589d02ecf603.svg": "a0c8acbcf5685a8950ce1c67722579dc745585fb0d668ce965327955e5e829ff",
-    "373.js.map": "56ea0ed5df76e1f592cc379d0bad41e08f0172af05cb9ee8de8133c5a09a1d5e",
-    "373.js": "37243b125d86f8b57df012f24c744de4ea1b4827d06866f1d92a0a47a7bef3ec",
-    "e6c722427cfa8715e19d.svg": "559341996765c2d5639a2818d76bcd88ffe252212193a573f2f9f77dae5064dd",
-    "133.js.map": "5b7e297f2a0c7b43039e2271a430b18ab9dea5c5d1c997aec8b43d4a1be11c63",
-    "e79edcfbe2068fae2364.svg": "89ea40b6dcf2dc8dfe146f8acac42b604e4d3c3dad03e539551d58a21f80654d",
-    "133.js": "e48bbeefa38a10e7d045476cb4c46b3eb1522844d9436ca8148dd6bd900ff1e6",
-    "README.md": "9808cbc6131d2512117f366e51f5ede7aeea5b73a852f0763ba2d05ce7334dd0",
-    "module.js.map": "ffe413bc06c8f89b89780aa9ad6ee21292c8c2148ece6923c036677af746e165"
+    "133.js.map": "60a64805bdffa4b6b2f85a4293ef78a4944da8b0a834998004d97fae7e282ad4"
   }
 }
 -----BEGIN PGP SIGNATURE-----
 
-wsA+BAETCgBtBYJo54JaCZB+TQxqcIhm50UUAAAAAAAcACBzYWx0QG5vdGF0
-aW9ucy5vcGVucGdwanMub3JnmZrvQnBapdlBinYeKkdIj6hTHrbt9kbDHyPz
-kzjvaWwWIQTzOyW2kQdOhGNlcPN+TQxqcIhm5wAAbS8CCQHSUv+/MxXZg2lu
-IUxMELa8+2n03JGPGLjWAOiNQyCpx12umMRWwrINgqaW3qwu0kjzXf27IDpf
-7PhV89opXwwA1QIGOB/wH8IT/jV6r9XdPrDPLT8Un42KlZjEO56J7Tcnv0QO
-2aDlMlkfNZiklAd8gJvhgERmOGi1UE+EAwfNv3Exu5k=
-=WVuo
+wsA+BAETCgBtBYJo+gG0CZB+TQxqcIhm50UUAAAAAAAcACBzYWx0QG5vdGF0
+aW9ucy5vcGVucGdwanMub3JnmQwycFBG8aHsdIh+gDLIYGMmg/PHwHxjum99
+LMeax9IWIQTzOyW2kQdOhGNlcPN+TQxqcIhm5wAAd88CCQHsCUvfJzf1S0dP
+iPzuAvRRShGLJAwI0R6ZqKZr1Z/N2Szi9vL44zUI1V5UdHC5T19bPouzzF3i
+Zq1dpxhZqboxTAIIop2zBrLbN6zBSgF5Tnkw+mr8m0a13YnIEgAi1ImkzJL6
+Z6jlHIntj3Dt9X3nV7yglGfRIK4n5zY5p/wn8kCmh2I=
+=IkvL
 -----END PGP SIGNATURE-----

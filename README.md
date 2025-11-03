@@ -1,5 +1,10 @@
 # FluxSim (Multi-Flux Simulator)
 
+[![CI](https://github.com/fastfluxlab/multi-flux-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/fastfluxlab/multi-flux-sim/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/fastfluxlab/multi-flux-sim/branch/main/graph/badge.svg)](https://codecov.io/gh/fastfluxlab/multi-flux-sim)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+
 Spin up DNS fast-flux, load-balancer, and CDN-like playgrounds in Docker with a friendly CLI.
 FluxSim was designed for experimentation and teaching—create networks on the fly, scale them
 live, and observe how DNS, HTTP, and monitoring react.
@@ -14,7 +19,11 @@ live, and observe how DNS, HTTP, and monitoring react.
 6. [Client Access](#client-access)
 7. [Data & Monitoring Pipeline](#data--monitoring-pipeline)
 8. [Host DNS Access](#host-dns-access)
-9. [Contributing & Tooling](#contributing--tooling)
+9. [Quality & Coverage](#quality--coverage)
+10. [Contributing & Tooling](#contributing--tooling)
+11. [Community & Governance](#community--governance)
+12. [Sponsors & Backers](#sponsors--backers)
+13. [License](#license)
 
 ## Quickstart
 
@@ -155,26 +164,49 @@ dig @127.0.0.1 -p 5301 cdn1.sim.local
 
 This makes it easy to test lookups from the host or external tools without entering the stack.
 
+## Quality & Coverage
+
+- **Lint & type-check**: `ruff check .`, `ruff format --check .`, `black --check .`, and `mypy fluxsim`
+  (mirrors the CI workflow).
+- **Unit tests with coverage**:
+
+  ```bash
+  pytest --cov=fluxsim --cov-report=xml --cov-report=term-missing
+  ```
+
+  This generates `coverage.xml` for upload to Codecov or another coverage tracker. Add the `CODECOV_TOKEN`
+  repository secret (for private repos) before enabling uploads.
+- **Badges**: Once Codecov is connected, the coverage badge at the top of this README reflects main-branch runs.
+
 ## Contributing & Tooling
 
-Install development dependencies and pre-commit hooks:
+We welcome pull requests! See [CONTRIBUTING.md](CONTRIBUTING.md) for workflow expectations,
+environment setup, and review tips. A quick-start for local development:
 
 ```bash
 pip install -e .[dev]
 pre-commit install
+pre-commit run --all-files
+pytest --cov=fluxsim --cov-report=term
 ```
 
-Run the quality suite locally before pushing:
+GitHub Actions (`.github/workflows/ci.yml`) repeats these checks on every push and pull request.
 
-```bash
-ruff check .
-ruff format --check .
-black --check .
-mypy fluxsim
-pytest
-```
+## Community & Governance
 
-GitHub Actions repeats these steps for every push and pull request (`.github/workflows/ci.yml`).
+- **Roadmap & issues**: Coordinate enhancements through [GitHub Issues](https://github.com/fastfluxlab/multi-flux-sim/issues)
+  and Projects/Milestones to make releases predictable.
+- **Discussions**: Enable GitHub Discussions or a community chat to share lab results, teaching material,
+  and troubleshooting tips.
+- **Code of Conduct**: Adopt the [Contributor Covenant v2.1](https://www.contributor-covenant.org/)
+  so collaborators understand behaviour expectations. Choose a contact email for incident reports.
+- **Security policy**: Add `SECURITY.md` describing responsible disclosure steps for vulnerabilities.
+
+## Sponsors & Backers
+
+FluxSim lowers the barrier to studying fast-flux infrastructure. If this project accelerates your research,
+coursework, or threat hunting, please sponsor continued development. Update `.github/FUNDING.yml` with your
+GitHub Sponsors handle or other funding platforms; sponsors will be recognised in release notes and community calls.
 
 ## License
 

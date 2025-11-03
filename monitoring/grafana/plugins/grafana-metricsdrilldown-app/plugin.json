@@ -5,7 +5,12 @@
     "id": "grafana-metricsdrilldown-app",
     "dependencies": {
         "grafanaDependency": ">=11.6.0",
-        "plugins": []
+        "plugins": [],
+        "extensions": {
+            "exposedComponents": [
+                "grafana/add-to-dashboard-form/v1"
+            ]
+        }
     },
     "preload": true,
     "autoEnabled": true,
@@ -35,8 +40,8 @@
                 "path": "img/breakdown.png"
             }
         ],
-        "version": "1.0.18",
-        "updated": "2025-10-15",
+        "version": "1.0.20",
+        "updated": "2025-10-30",
         "links": [
             {
                 "name": "GitHub",
