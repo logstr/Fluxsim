@@ -1,4 +1,4 @@
-# FluxSim (Multi-Flux Simulator)
+# FluxSim
 
 [![CI](https://github.com/fastfluxlab/multi-flux-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/fastfluxlab/multi-flux-sim/actions/workflows/ci.yml)
 [![Coverage Status](https://codecov.io/gh/logstr.io/Fluxsim/branch/main/graph/badge.svg)](https://codecov.io/gh/logstr.io/Fluxsim)
@@ -10,6 +10,8 @@
 Spin up DNS fast-flux, load-balancer, and CDN-like playgrounds in Docker with a friendly CLI.
 FluxSim was designed for experimentation and teaching—create networks on the fly, scale them
 live, and observe how DNS, HTTP, and monitoring react.
+
+<script src="https://asciinema.org/a/QohxjWlitfUOILmIWyega4mD1" id="asciicast-bJMOlPe5F4mFLY0Rl6fiJSOp3" async></script>
 
 ## Table of Contents
 
