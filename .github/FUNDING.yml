@@ -1,3 +1,4 @@
 # Update the handles below with the funding platforms you want to expose in the repository UI.
 # Supported keys: https://docs.github.com/en/sponsors/getting-started-with-github-sponsors/setting-up-github-sponsors-for-your-account#supported-funding-models
 github: fastfluxlab
+open_collective: logstrio
