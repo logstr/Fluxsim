@@ -1,6 +1,7 @@
 import os
 import subprocess
 import time
+from typing import Any
 
 from riposte.printer import Palette
 
@@ -26,7 +27,7 @@ def _project_net(name: str) -> str:
     return f"{PROJECT_NAME}_{name}_net"
 
 
-def _write_client_resolv(cli=None) -> str:
+def _write_client_resolv(cli: Any | None = None) -> str:
     """
     Generate dns_config/resolv.dns_client.conf from *running* dns_server_* containers if any,
     otherwise fall back to 172.<octet>.0.53 computed from NETWORKS.
@@ -123,7 +124,7 @@ def _service_ips(service_name: str, network_name: str) -> list[str]:
     return sorted(set(ips))
 
 
-def _compose_validate(cli, compose_file: str) -> bool:
+def _compose_validate(cli: Any | None, compose_file: str) -> bool:
     """Run 'docker compose config' and pretty-print the first error if any."""
     proc = subprocess.run(
         ["docker", "compose", "-f", compose_file, "config"], capture_output=True, text=True
@@ -153,7 +154,7 @@ def _wait_ips(service: str, net: str, expect_at_least=1, timeout=60, poll=2) -> 
     return last
 
 
-def _reload_dns_service(name: str, cli: object | None = None) -> bool:
+def _reload_dns_service(name: str, cli: Any | None = None) -> bool:
     """
     Ask the dns_server_<name> container to reload its zone.
     Falls back to sending HUP to named if rndc is unavailable.
@@ -176,7 +177,7 @@ def _reload_dns_service(name: str, cli: object | None = None) -> bool:
     return ok
 
 
-def refresh_flux_agents(name: str, cli: object | None = None) -> list[str]:
+def refresh_flux_agents(name: str, cli: Any | None = None) -> list[str]:
     """
     Capture current proxy agent IPs for a flux network and rewrite the agents file.
     Returns the list of IPs discovered.
@@ -191,7 +192,7 @@ def refresh_flux_agents(name: str, cli: object | None = None) -> list[str]:
     return ips
 
 
-def update_zone_ttl(name: str, ttl: int, cli: object | None = None) -> bool:
+def update_zone_ttl(name: str, ttl: int, cli: Any | None = None) -> bool:
     """
     Update the zone TTL on disk and request a reload from the dns container.
     """
@@ -206,7 +207,7 @@ def update_zone_ttl(name: str, ttl: int, cli: object | None = None) -> bool:
     return _reload_dns_service(name, cli)
 
 
-def scale_flux_agents(name: str, size: int, cli: object | None = None) -> bool:
+def scale_flux_agents(name: str, size: int, cli: Any | None = None) -> bool:
     """
     Scale the running proxy_agent_<name> service to the requested size.
     Afterwards refreshes the flux agents list and bumps DNS.
@@ -234,7 +235,7 @@ def scale_flux_agents(name: str, size: int, cli: object | None = None) -> bool:
     return True
 
 
-def scale_lb_workers(name: str, size: int, cli: object | None = None) -> bool:
+def scale_lb_workers(name: str, size: int, cli: Any | None = None) -> bool:
     """
     Scale the worker_<name> service backing the load balancer.
     """
@@ -259,7 +260,7 @@ def scale_lb_workers(name: str, size: int, cli: object | None = None) -> bool:
     return True
 
 
-def scale_cdn_edges(name: str, size: int, cli: object | None = None) -> bool:
+def scale_cdn_edges(name: str, size: int, cli: Any | None = None) -> bool:
     """
     Scale the cdn_edge_<name> service and refresh multi-A records.
     """
@@ -320,7 +321,7 @@ def _err(cli, line: str):
         print("[-] " + line)
 
 
-def deploy(cli: object | None = None):
+def deploy(cli: Any | None = None):
     if len(NETWORKS) == 0:
         if cli:
             cli.print(Palette.YELLOW.format("WARNING: No networks registered."))
@@ -398,7 +399,7 @@ def deploy(cli: object | None = None):
     _ok(cli, "\nDeployment complete.")
 
 
-def stop_and_clean(cli: object | None = None):
+def stop_and_clean(cli: Any | None = None):
     _hdr(cli, "\n[Stopping]")
     dcompose(["down", "-v", "--remove-orphans"], COMPOSE_FILE, check=False)
     clear_state()

@@ -1,6 +1,8 @@
 # fluxsim/commands.py
 from __future__ import annotations
 
+import subprocess
+
 from riposte.printer import Palette
 
 from .config import COMPOSE_FILE, MAX_AGENTS
@@ -605,7 +607,10 @@ by IP, or provide an explicit comma-separated order of network names.
         if not res:
             cli.error("docker compose exec failed.")
             return
-        if getattr(res, "returncode", 1) != 0:
+        if not isinstance(res, subprocess.CompletedProcess):
+            cli.error("Unexpected docker compose response.")
+            return
+        if res.returncode != 0:
             err = (res.stderr or "").strip()
             cli.error(err or "lynx reported an error.")
             return
@@ -626,9 +631,15 @@ by IP, or provide an explicit comma-separated order of network names.
             COMPOSE_FILE,
             check=False,
         )
-        if not res or getattr(res, "returncode", 1) != 0:
-            err = getattr(res, "stderr", "") if res else "compose invocation failed"
-            cli.error((err or "desktop start failed").strip())
+        if not res:
+            cli.error("desktop start failed (compose invocation failed).")
+            return
+        if not isinstance(res, subprocess.CompletedProcess):
+            cli.error("Unexpected docker compose response.")
+            return
+        if res.returncode != 0:
+            err = (res.stderr or "").strip()
+            cli.error(err or "desktop start failed")
             return
         cli.success("Desktop client is up on http://localhost:8081 (abc/abc).")
 
@@ -644,16 +655,20 @@ by IP, or provide an explicit comma-separated order of network names.
         stop = dcompose(
             ["--profile", "desktop", "stop", "dns_client_desktop"], COMPOSE_FILE, check=False
         )
-        if stop and getattr(stop, "returncode", 0) not in (0, 1):
+        if stop and isinstance(stop, subprocess.CompletedProcess) and stop.returncode not in (0, 1):
             cli.error((stop.stderr or "desktop stop failed").strip())
             return
         rm = dcompose(
             ["--profile", "desktop", "rm", "-f", "dns_client_desktop"], COMPOSE_FILE, check=False
         )
-        if not rm or getattr(rm, "returncode", 1) != 0:
-            cli.error(
-                (rm.stderr or "desktop remove failed").strip() if rm else "desktop remove failed"
-            )
+        if not rm:
+            cli.error("desktop remove failed")
+            return
+        if not isinstance(rm, subprocess.CompletedProcess):
+            cli.error("Unexpected docker compose response.")
+            return
+        if rm.returncode != 0:
+            cli.error((rm.stderr or "desktop remove failed").strip())
             return
         cli.success("Desktop client stopped and removed.")
 
