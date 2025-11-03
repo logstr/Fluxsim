@@ -1,6 +1,6 @@
 # FluxSim
 
-[![CI](https://github.com/logstr/multi-flux-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/logstr/Fluxsim/actions/workflows/ci.yml)
+[![CI](https://github.com/logstr/Fluxsim/actions/workflows/ci.yml/badge.svg)](https://github.com/logstr/Fluxsim/actions/workflows/ci.yml)
 [![Coverage Status](https://codecov.io/gh/logstr/Fluxsim/branch/main/graph/badge.svg)](https://codecov.io/gh/logstr/Fluxsim)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
