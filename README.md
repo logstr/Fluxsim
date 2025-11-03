@@ -11,7 +11,8 @@ Spin up DNS fast-flux, load-balancer, and CDN-like playgrounds in Docker with a 
 FluxSim was designed for experimentation and teaching—create networks on the fly, scale them
 live, and observe how DNS, HTTP, and monitoring react.
 
-<script src="https://asciinema.org/a/QohxjWlitfUOILmIWyega4mD1" id="asciicast-bJMOlPe5F4mFLY0Rl6fiJSOp3" async></script>
+<!-- Embedded demo SVG from examples/demo.svg -->
+![Demo SVG](examples/demo.svg)
 
 ## Table of Contents
 
