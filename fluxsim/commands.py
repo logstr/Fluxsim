@@ -1,15 +1,15 @@
 # fluxsim/commands.py
-from typing import Dict, List, Tuple
-from .state import NETWORKS, BASE_SUBNET_OCTET, CLIENT_RESOLV, Net, write_registry
-from .config import MAX_AGENTS, COMPOSE_FILE
-from .state import write_registry
+from __future__ import annotations
+
 from riposte.printer import Palette
-from dataclasses import dataclass, field
-from typing import Dict
+
+from .config import COMPOSE_FILE, MAX_AGENTS
 from .docker_utils import compose as dcompose
+from .state import BASE_SUBNET_OCTET, CLIENT_RESOLV, NETWORKS, Net, write_registry
 
 # Structured help registry: cmd -> metadata
-HELP: Dict[str, Dict[str, object]] = {}
+HELP: dict[str, dict[str, object]] = {}
+
 
 def register(cli):
     """
@@ -29,6 +29,7 @@ def register(cli):
             if BASE_SUBNET_OCTET > 255:
                 raise RuntimeError("Exhausted 172.x.0.0/24 ranges")
         # ---------- pretty printing helpers ----------
+
     def _hdr(text: str) -> str:
         # Bold cyan header line
         return Palette.BOLD.format(Palette.CYAN.format(text))
@@ -46,7 +47,7 @@ def register(cli):
         desc: str,
         usage: str,
         long_desc: str = "",
-        examples: List[str] | None = None,
+        examples: list[str] | None = None,
         group: str = "General",
     ):
         """Decorator factory: attach command + store rich help metadata."""
@@ -61,7 +62,7 @@ def register(cli):
         return cli.command(name, desc)
 
     # Import late to avoid cycles
-    from .deploy import (
+    from .deploy import (  # noqa: I001
         deploy,
         stop_and_clean,
         scale_flux_agents,
@@ -83,8 +84,7 @@ def register(cli):
         group="Lifecycle",
     )
     def cmd_deploy():
-        from .deploy import deploy  # local import to avoid cycles
-        deploy(cli)                # pass cli for pretty prints
+        deploy(cli)  # pass cli for pretty prints
         write_registry(NETWORKS)
         cmd_status()
 
@@ -97,8 +97,7 @@ def register(cli):
         group="Lifecycle",
     )
     def cmd_stop():
-        from .deploy import stop_and_clean
-        stop_and_clean(cli)        # pass cli for pretty prints
+        stop_and_clean(cli)  # pass cli for pretty prints
         write_registry(NETWORKS)
         cli.success("Stopped.")
 
@@ -119,19 +118,17 @@ def register(cli):
         for name, inst in sorted(NETWORKS.items()):
             dns_ip = f"172.{inst.subnet_octet}.0.53"
             # Header line for the network
-            cli.info(
-                _hdr(f"[{inst.kind.upper()}] {name}") +
-                "  " +
-                _kv("Subnet: ", inst.subnet)
-            )
+            cli.info(_hdr(f"[{inst.kind.upper()}] {name}") + "  " + _kv("Subnet: ", inst.subnet))
 
             # Detail lines, always prefixed with [+] and in green
             _ok(_kv("DNS IP: ", f"{dns_ip}") + "   " + _kv("Domain: ", f"{name}.sim.local"))
 
             if inst.kind == "flux":
                 _ok(_kv("Agents: ", str(inst.size)))
-                _ok("Test:   docker compose exec dns_client_test "
-                    f"dig @{dns_ip} {name}.sim.local +short")
+                _ok(
+                    "Test:   docker compose exec dns_client_test "
+                    f"dig @{dns_ip} {name}.sim.local +short"
+                )
 
             elif inst.kind == "lb":
                 lb_ip = f"172.{inst.subnet_octet}.0.80"
@@ -140,70 +137,104 @@ def register(cli):
 
             elif inst.kind == "cdn":
                 _ok(_kv("Edges: ", str(inst.size)))
-                _ok("Test:    docker compose exec dns_client_test "
-                    f"dig @{dns_ip} {name}.sim.local +short")
+                _ok(
+                    "Test:    docker compose exec dns_client_test "
+                    f"dig @{dns_ip} {name}.sim.local +short"
+                )
 
             else:  # normal
-                _ok("Test:   docker compose exec dns_client_test "
-                    f"dig @{dns_ip} {name}.sim.local +short")
+                _ok(
+                    "Test:   docker compose exec dns_client_test "
+                    f"dig @{dns_ip} {name}.sim.local +short"
+                )
 
             cli.print("")  # blank line between networks
 
     # --- add network commands ---
-    @_add("add_normal_network", desc="Create a simple origin-only network.", usage="add_normal_network <name>")
+    @_add(
+        "add_normal_network",
+        desc="Create a simple origin-only network.",
+        usage="add_normal_network <name>",
+    )
     def add_normal_network(name: str):
         if name in NETWORKS:
-            cli.error("Already exists."); return
+            cli.error("Already exists.")
+            return
         octet = _get_next_subnet()
         NETWORKS[name] = Net(
-            name=name, kind="normal",
-            subnet_octet=octet, subnet=f"172.{octet}.0.0/24",
+            name=name,
+            kind="normal",
+            subnet_octet=octet,
+            subnet=f"172.{octet}.0.0/24",
         )
         write_registry(NETWORKS)
         cli.success(f"Added normal '{name}' (172.{octet}.0.0/24)")
         cmd_status()
 
-    @_add("add_flux_network", desc="Create a fast-flux network (proxy agents rotate via DNS).", usage="add_flux_network <name>")
+    @_add(
+        "add_flux_network",
+        desc="Create a fast-flux network (proxy agents rotate via DNS).",
+        usage="add_flux_network <name>",
+    )
     def add_flux_network(name: str):
         if name in NETWORKS:
-            cli.error("Already exists."); return
+            cli.error("Already exists.")
+            return
         octet = _get_next_subnet()
         NETWORKS[name] = Net(
-            name=name, kind="flux",
-            subnet_octet=octet, subnet=f"172.{octet}.0.0/24",
+            name=name,
+            kind="flux",
+            subnet_octet=octet,
+            subnet=f"172.{octet}.0.0/24",
         )
         write_registry(NETWORKS)
         cli.success(f"Added flux '{name}' (172.{octet}.0.0/24)")
         cmd_status()
 
-    @_add("add_lb_network", desc="Create a load-balanced network (LB + N workers).", usage="add_lb_network <name>")
+    @_add(
+        "add_lb_network",
+        desc="Create a load-balanced network (LB + N workers).",
+        usage="add_lb_network <name>",
+    )
     def add_lb_network(name: str):
         if name in NETWORKS:
-            cli.error("Already exists."); return
+            cli.error("Already exists.")
+            return
         octet = _get_next_subnet()
         NETWORKS[name] = Net(
-            name=name, kind="lb",
-            subnet_octet=octet, subnet=f"172.{octet}.0.0/24",
+            name=name,
+            kind="lb",
+            subnet_octet=octet,
+            subnet=f"172.{octet}.0.0/24",
         )
         write_registry(NETWORKS)
         cli.success(f"Added load balanced '{name}' (172.{octet}.0.0/24)")
         cmd_status()
 
-    @_add("add_cdn_network", desc="Create a CDN-like network with multiple edges (multi-A DNS).", usage="add_cdn_network <name>")
+    @_add(
+        "add_cdn_network",
+        desc="Create a CDN-like network with multiple edges (multi-A DNS).",
+        usage="add_cdn_network <name>",
+    )
     def add_cdn_network(name: str):
         if name in NETWORKS:
-            cli.error("Already exists."); return
+            cli.error("Already exists.")
+            return
         octet = _get_next_subnet()
         NETWORKS[name] = Net(
-            name=name, kind="cdn",
-            subnet_octet=octet, subnet=f"172.{octet}.0.0/24",
+            name=name,
+            kind="cdn",
+            subnet_octet=octet,
+            subnet=f"172.{octet}.0.0/24",
             size=3,
         )
         write_registry(NETWORKS)
         cli.success(f"Added CDN '{name}' (172.{octet}.0.0/24) with 3 edges")
         cmd_status()
 
-    @_add("remove_network", desc="Delete a network from the catalog.", usage="remove_network <name>")
+    @_add(
+        "remove_network", desc="Delete a network from the catalog.", usage="remove_network <name>"
+    )
     def remove_network(name: str):
         if name not in NETWORKS:
             cli.error("Unknown network.")
@@ -590,10 +621,11 @@ by IP, or provide an explicit comma-separated order of network names.
         examples=["desktop_start"],
     )
     def desktop_start():
-        res = dcompose([
-            "--profile", "desktop",
-            "up", "-d", "--build", "dns_client_desktop"
-        ], COMPOSE_FILE, check=False)
+        res = dcompose(
+            ["--profile", "desktop", "up", "-d", "--build", "dns_client_desktop"],
+            COMPOSE_FILE,
+            check=False,
+        )
         if not res or getattr(res, "returncode", 1) != 0:
             err = getattr(res, "stderr", "") if res else "compose invocation failed"
             cli.error((err or "desktop start failed").strip())
@@ -609,17 +641,19 @@ by IP, or provide an explicit comma-separated order of network names.
         examples=["desktop_stop"],
     )
     def desktop_stop():
-        stop = dcompose([
-            "--profile", "desktop", "stop", "dns_client_desktop"
-        ], COMPOSE_FILE, check=False)
-        if stop and getattr(stop, "returncode", 0) not in (0,1):
+        stop = dcompose(
+            ["--profile", "desktop", "stop", "dns_client_desktop"], COMPOSE_FILE, check=False
+        )
+        if stop and getattr(stop, "returncode", 0) not in (0, 1):
             cli.error((stop.stderr or "desktop stop failed").strip())
             return
-        rm = dcompose([
-            "--profile", "desktop", "rm", "-f", "dns_client_desktop"
-        ], COMPOSE_FILE, check=False)
+        rm = dcompose(
+            ["--profile", "desktop", "rm", "-f", "dns_client_desktop"], COMPOSE_FILE, check=False
+        )
         if not rm or getattr(rm, "returncode", 1) != 0:
-            cli.error((rm.stderr or "desktop remove failed").strip() if rm else "desktop remove failed")
+            cli.error(
+                (rm.stderr or "desktop remove failed").strip() if rm else "desktop remove failed"
+            )
             return
         cli.success("Desktop client stopped and removed.")
 

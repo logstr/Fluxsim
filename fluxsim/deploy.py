@@ -1,27 +1,30 @@
-import os, time, subprocess
-from typing import Optional
+import os
+import subprocess
+import time
+
 from riposte.printer import Palette
 
+from .compose_gen import generate
 from .config import (
     COMPOSE_FILE,
-    PROJECT_NAME,
+    DNS_ZONE_FILE_PATH_TEMPLATE,
     FLUX_CONTAINER_BASE_NAME,
+    PROJECT_NAME,
     WORKER_CONTAINER_BASE_NAME,
 )
-from .state import NETWORKS, clear_state
-from .compose_gen import generate
-from .docker_utils import compose as dcompose, service_container_ids
 from .dns_utils import (
-    set_single_a_record,
     set_multi_a_records,
-    write_flux_agents,
+    set_single_a_record,
     set_zone_ttl,
+    write_flux_agents,
 )
-from .config import DNS_ZONE_FILE_PATH_TEMPLATE
+from .docker_utils import compose as dcompose, service_container_ids
+from .state import NETWORKS, clear_state
 
 
 def _project_net(name: str) -> str:
     return f"{PROJECT_NAME}_{name}_net"
+
 
 def _write_client_resolv(cli=None) -> str:
     """
@@ -31,6 +34,7 @@ def _write_client_resolv(cli=None) -> str:
     Returns the absolute path written.
     """
     import json
+
     os.makedirs("dns_config", exist_ok=True)
     path = os.path.join("dns_config", "resolv.dns_client.conf")
 
@@ -40,7 +44,9 @@ def _write_client_resolv(cli=None) -> str:
         # docker compose ps --format json prints an array in recent versions; handle string/empty too
         out = subprocess.run(
             ["docker", "compose", "-p", PROJECT_NAME, "-f", COMPOSE_FILE, "ps", "--format", "json"],
-            capture_output=True, text=True, check=False
+            capture_output=True,
+            text=True,
+            check=False,
         ).stdout.strip()
         items = json.loads(out) if out else []
         if isinstance(items, list):
@@ -58,7 +64,7 @@ def _write_client_resolv(cli=None) -> str:
                         try:
                             arr = json.loads(insp)
                             nets = arr[0]["NetworkSettings"]["Networks"] or {}
-                            for net_name, meta in nets.items():
+                            for _net_name, meta in nets.items():
                                 # pick first IPv4
                                 ip = (meta.get("IPAddress") or "").strip()
                                 if ip and ip.count(".") == 3:
@@ -82,7 +88,10 @@ def _write_client_resolv(cli=None) -> str:
 
     if cli:
         if ns_ips:
-            _ok(cli, f"Wrote resolv for client with {len(ns_ips)} nameserver(s): {', '.join(ns_ips)}")
+            _ok(
+                cli,
+                f"Wrote resolv for client with {len(ns_ips)} nameserver(s): {', '.join(ns_ips)}",
+            )
         else:
             _warn(cli, "Wrote resolv for client with no nameservers (check networks)")
 
@@ -96,9 +105,16 @@ def _service_ips(service_name: str, network_name: str) -> list[str]:
     for cid in ids:
         try:
             out = subprocess.run(
-                ["docker", "inspect", "-f",
-                 f'{{{{ (index .NetworkSettings.Networks "{docker_net}").IPAddress }}}}', cid],
-                check=True, capture_output=True, text=True
+                [
+                    "docker",
+                    "inspect",
+                    "-f",
+                    f'{{{{ (index .NetworkSettings.Networks "{docker_net}").IPAddress }}}}',
+                    cid,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
             ).stdout.strip()
             if out and out.count(".") == 3:
                 ips.append(out)
@@ -106,11 +122,11 @@ def _service_ips(service_name: str, network_name: str) -> list[str]:
             pass
     return sorted(set(ips))
 
+
 def _compose_validate(cli, compose_file: str) -> bool:
     """Run 'docker compose config' and pretty-print the first error if any."""
     proc = subprocess.run(
-        ["docker","compose","-f",compose_file,"config"],
-        capture_output=True, text=True
+        ["docker", "compose", "-f", compose_file, "config"], capture_output=True, text=True
     )
     if proc.returncode == 0:
         return True
@@ -124,6 +140,7 @@ def _compose_validate(cli, compose_file: str) -> bool:
         print(proc.stderr or proc.stdout)
     return False
 
+
 def _wait_ips(service: str, net: str, expect_at_least=1, timeout=60, poll=2) -> list[str]:
     deadline = time.time() + timeout
     last: list[str] = []
@@ -136,7 +153,7 @@ def _wait_ips(service: str, net: str, expect_at_least=1, timeout=60, poll=2) -> 
     return last
 
 
-def _reload_dns_service(name: str, cli: Optional[object] = None) -> bool:
+def _reload_dns_service(name: str, cli: object | None = None) -> bool:
     """
     Ask the dns_server_<name> container to reload its zone.
     Falls back to sending HUP to named if rndc is unavailable.
@@ -159,7 +176,7 @@ def _reload_dns_service(name: str, cli: Optional[object] = None) -> bool:
     return ok
 
 
-def refresh_flux_agents(name: str, cli: Optional[object] = None) -> list[str]:
+def refresh_flux_agents(name: str, cli: object | None = None) -> list[str]:
     """
     Capture current proxy agent IPs for a flux network and rewrite the agents file.
     Returns the list of IPs discovered.
@@ -174,7 +191,7 @@ def refresh_flux_agents(name: str, cli: Optional[object] = None) -> list[str]:
     return ips
 
 
-def update_zone_ttl(name: str, ttl: int, cli: Optional[object] = None) -> bool:
+def update_zone_ttl(name: str, ttl: int, cli: object | None = None) -> bool:
     """
     Update the zone TTL on disk and request a reload from the dns container.
     """
@@ -189,7 +206,7 @@ def update_zone_ttl(name: str, ttl: int, cli: Optional[object] = None) -> bool:
     return _reload_dns_service(name, cli)
 
 
-def scale_flux_agents(name: str, size: int, cli: Optional[object] = None) -> bool:
+def scale_flux_agents(name: str, size: int, cli: object | None = None) -> bool:
     """
     Scale the running proxy_agent_<name> service to the requested size.
     Afterwards refreshes the flux agents list and bumps DNS.
@@ -217,7 +234,7 @@ def scale_flux_agents(name: str, size: int, cli: Optional[object] = None) -> boo
     return True
 
 
-def scale_lb_workers(name: str, size: int, cli: Optional[object] = None) -> bool:
+def scale_lb_workers(name: str, size: int, cli: object | None = None) -> bool:
     """
     Scale the worker_<name> service backing the load balancer.
     """
@@ -242,7 +259,7 @@ def scale_lb_workers(name: str, size: int, cli: Optional[object] = None) -> bool
     return True
 
 
-def scale_cdn_edges(name: str, size: int, cli: Optional[object] = None) -> bool:
+def scale_cdn_edges(name: str, size: int, cli: object | None = None) -> bool:
     """
     Scale the cdn_edge_<name> service and refresh multi-A records.
     """
@@ -303,16 +320,19 @@ def _err(cli, line: str):
         print("[-] " + line)
 
 
-def deploy(cli: Optional[object] = None):
+def deploy(cli: object | None = None):
     if len(NETWORKS) == 0:
-        if cli: cli.print(Palette.YELLOW.format("WARNING: No networks registered."))
-        else: print("WARNING: No networks registered.")
+        if cli:
+            cli.print(Palette.YELLOW.format("WARNING: No networks registered."))
+        else:
+            print("WARNING: No networks registered.")
         return
 
     # Generate compose file
-    with open(COMPOSE_FILE,"w") as f:
+    with open(COMPOSE_FILE, "w") as f:
         f.write(generate(COMPOSE_FILE))
-    if cli: cli.success(f"Wrote {COMPOSE_FILE}")
+    if cli:
+        cli.success(f"Wrote {COMPOSE_FILE}")
 
     if not _compose_validate(cli, COMPOSE_FILE):
         return
@@ -378,19 +398,22 @@ def deploy(cli: Optional[object] = None):
     _ok(cli, "\nDeployment complete.")
 
 
-def stop_and_clean(cli: Optional[object] = None):
+def stop_and_clean(cli: object | None = None):
     _hdr(cli, "\n[Stopping]")
     dcompose(["down", "-v", "--remove-orphans"], COMPOSE_FILE, check=False)
     clear_state()
     try:
         out = subprocess.run(
             ["docker", "network", "ls", "--format", "{{.Name}}"],
-            capture_output=True, text=True, check=False
+            capture_output=True,
+            text=True,
+            check=False,
         ).stdout
         leftovers = [n for n in out.splitlines() if n.startswith(f"{PROJECT_NAME}_")]
         if leftovers:
-            subprocess.run(["docker", "network", "rm"] + leftovers,
-                           capture_output=True, text=True, check=False)
+            subprocess.run(
+                ["docker", "network", "rm"] + leftovers, capture_output=True, text=True, check=False
+            )
             _ok(cli, f"Removed networks: {', '.join(leftovers)}")
     except Exception as e:
         _warn(cli, f"While removing networks: {e}")

@@ -7,10 +7,13 @@ from .dns_utils import write_zone_file
 
 home_dir = os.environ.get("HOME", os.path.expanduser("~"))
 
+
 def _client_resolv_lines() -> list[str]:
     # Build resolv.conf content for the test client from NETWORKS
-    lines = [f"search {CLIENT_RESOLV.get('search','sim.local')}",
-             f"options ndots:{CLIENT_RESOLV.get('ndots',1)}"]
+    lines = [
+        f"search {CLIENT_RESOLV.get('search', 'sim.local')}",
+        f"options ndots:{CLIENT_RESOLV.get('ndots', 1)}",
+    ]
     if CLIENT_RESOLV.get("order"):
         nets = [n for n in CLIENT_RESOLV["order"] if n in NETWORKS]
         ns_ips = [f"172.{NETWORKS[n].subnet_octet}.0.53" for n in nets]
@@ -20,8 +23,10 @@ def _client_resolv_lines() -> list[str]:
         lines.append(f"nameserver {ip}")
     return lines
 
+
 def generate(compose_file: str) -> str:
     import os, shutil
+
     networks_yaml = "networks:\n"
     services_yaml = "services:\n"
     test_client_nets: set[str] = set()
@@ -66,7 +71,7 @@ def generate(compose_file: str) -> str:
         ]
 
         dns_cmd_yaml = ""
-        if inst.kind == 'flux':
+        if inst.kind == "flux":
             agents_file = FLUX_IPS_FILE_PATH_TEMPLATE.format(network_name=name)
             dns_vols += [
                 f"- ./scripts/dns_updater.sh:/usr/local/bin/dns_updater.sh:ro",
@@ -78,7 +83,7 @@ def generate(compose_file: str) -> str:
             "- DOMAIN=sim.local",
             f"- RECORD_NAME={name}",
         ]
-        if inst.kind == 'flux':
+        if inst.kind == "flux":
             env_lines += [
                 f"- FLUX_INTERVAL={int(inst.flux_interval)}",
                 f"- FLUX_SELECTOR={inst.flux_selector}",
@@ -96,13 +101,13 @@ def generate(compose_file: str) -> str:
       - "{host_dns_port}:53"
       - "{host_dns_port}:53/udp"
     volumes:
-{chr(10).join(['      ' + v for v in dns_vols])}{dns_cmd_yaml}
+{chr(10).join(["      " + v for v in dns_vols])}{dns_cmd_yaml}
     environment:
-{chr(10).join(['      ' + e for e in env_lines])}
+{chr(10).join(["      " + e for e in env_lines])}
     restart: always
 """
 
-        if inst.kind == 'normal':
+        if inst.kind == "normal":
             services_yaml += f"""  origin_server_{name}:
     image: nginx:alpine
     networks: [ "{net}" ]
@@ -111,7 +116,7 @@ def generate(compose_file: str) -> str:
       - ./html:/usr/share/nginx/html:ro
     restart: always
 """
-        elif inst.kind == 'flux':
+        elif inst.kind == "flux":
             origin_svc = f"origin_server_{name}"
             agent_svc = f"{FLUX_CONTAINER_BASE_NAME}_{name}"
             services_yaml += f"""  {origin_svc}:
@@ -132,7 +137,7 @@ def generate(compose_file: str) -> str:
     command: ["/bin/sh","-c","envsubst '$$ORIGIN_SERVER_NAME' < /etc/nginx/templates/proxy.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
     restart: always
 """
-        elif inst.kind == 'lb':
+        elif inst.kind == "lb":
             lb_svc = f"load_balancer_{name}"
             worker_svc = f"{WORKER_CONTAINER_BASE_NAME}_{name}"
             lb_ip = f"172.{octet}.0.80"
@@ -157,7 +162,7 @@ def generate(compose_file: str) -> str:
     command: ["/bin/sh","-lc","envsubst '$$WORKER_SERVICE_NAME' < /etc/nginx/templates/default.conf.template | sed 's#__IP_HASH_MARKER__#{ip_hash_line}#' > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
     restart: always
 """
-        elif inst.kind == 'cdn':
+        elif inst.kind == "cdn":
             origin_svc = f"origin_server_{name}"
             edge_svc = f"cdn_edge_{name}"
             services_yaml += f"""  {origin_svc}:
@@ -200,8 +205,14 @@ def generate(compose_file: str) -> str:
     # ---- monitoring and client ----
     base_exporter_nets = {"soc_net", "default", "dmz_net", "sensors_net"}
     exporter_network_names = base_exporter_nets | monitor_nets
-    exporter_networks_block = "\n".join(f"      - {name}" for name in sorted(exporter_network_names))
-    client_networks_block = "\n".join(f"      - {name}" for name in sorted(test_client_nets)) if test_client_nets else "      - default"
+    exporter_networks_block = "\n".join(
+        f"      - {name}" for name in sorted(exporter_network_names)
+    )
+    client_networks_block = (
+        "\n".join(f"      - {name}" for name in sorted(test_client_nets))
+        if test_client_nets
+        else "      - default"
+    )
 
     if NETWORKS:
         services_yaml += f"""  fluxlab_exporter:
@@ -290,9 +301,9 @@ def generate(compose_file: str) -> str:
     image: postgres:16
     container_name: ffl-postgres
     environment:
-      POSTGRES_USER: ${'{' }PGUSER{ '}'}
-      POSTGRES_PASSWORD: ${'{' }PGPASSWORD{ '}'}
-      POSTGRES_DB: ${'{' }PGDATABASE{ '}'}
+      POSTGRES_USER: ${"{"}PGUSER{"}"}
+      POSTGRES_PASSWORD: ${"{"}PGPASSWORD{"}"}
+      POSTGRES_DB: ${"{"}PGDATABASE{"}"}
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks: [ "soc_net" ]
@@ -344,7 +355,7 @@ def generate(compose_file: str) -> str:
       - KAFKA_TOPIC_FF_SIGNALS=ff.signals
       - CORE_HOST=http://fluxlab_exporter:9108
     volumes:
-{chr(10).join(['      ' + v for v in passive_agent_vols])}
+{chr(10).join(["      " + v for v in passive_agent_vols])}
     depends_on:
       redpanda:
         condition: service_healthy
@@ -362,9 +373,9 @@ def generate(compose_file: str) -> str:
       - KAFKA_TOPIC_FF_SIGNALS=ff.signals
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
-      - POSTGRES_DB=${'{' }PGDATABASE{ '}'}
-      - POSTGRES_USER=${'{' }PGUSER{ '}'}
-      - POSTGRES_PASSWORD=${'{' }PGPASSWORD{ '}'}
+      - POSTGRES_DB=${"{"}PGDATABASE{"}"}
+      - POSTGRES_USER=${"{"}PGUSER{"}"}
+      - POSTGRES_PASSWORD=${"{"}PGPASSWORD{"}"}
     depends_on:
       redpanda:
         condition: service_healthy

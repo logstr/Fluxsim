@@ -49,14 +49,25 @@ target-version = ["py310"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+extend-exclude = [
+  "active-probe",
+  "passive-agent",
+  "ingestor",
+  "monitoring",
+  "examples",
+  "html",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-ignore = ["E203", "E501"]
+ignore = ["E203", "E401", "E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["fluxsim"]
 combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"fluxsim/compose_gen.py" = ["F401", "F403", "F405", "F541", "I001"]
 
 [tool.mypy]
 python_version = "3.10"

@@ -1,10 +1,15 @@
-import os, re, time
-from typing import List
+import os
+import re
+import time
+
 from .config import DNS_ZONE_FILE_PATH_TEMPLATE, FLUX_IPS_FILE_PATH_TEMPLATE
 
 SERIAL_LINE = r"^\s*(\d+)\s*; Serial \(dynamically generated\)\s*$"
 
-def write_zone_file(network_name: str, dns_ip: str, domain: str, subnet_octet: int, ttl: int) -> str:
+
+def write_zone_file(
+    network_name: str, dns_ip: str, domain: str, subnet_octet: int, ttl: int
+) -> str:
     serial = time.strftime("%Y%m%d") + "01"
     zone_root = "sim.local."
     label = network_name
@@ -24,36 +29,53 @@ ns      IN A {dns_ip}
 """
     os.makedirs("dns_config", exist_ok=True)
     path = DNS_ZONE_FILE_PATH_TEMPLATE.format(network_name=network_name)
-    with open(path,"w") as f: f.write(content)
+    with open(path, "w") as f:
+        f.write(content)
     return path
+
 
 def bump_serial(zone: str) -> str:
     m = re.search(SERIAL_LINE, zone, flags=re.M)
     if m:
-        cur = int(m.group(1)); serial = str(cur + 1)
-        return re.sub(SERIAL_LINE, f"                 {serial} ; Serial (dynamically generated)", zone, flags=re.M)
+        cur = int(m.group(1))
+        serial = str(cur + 1)
+        return re.sub(
+            SERIAL_LINE,
+            f"                 {serial} ; Serial (dynamically generated)",
+            zone,
+            flags=re.M,
+        )
     else:
         return zone
 
-def set_single_a_record(path: str, label: str, ip: str):
-    with open(path,"r") as f: zone = f.read()
+
+def set_single_a_record(path: str, label: str, ip: str) -> None:
+    with open(path) as f:
+        zone = f.read()
     zone = bump_serial(zone)
     label_pat = rf"^[ \t]*{re.escape(label)}[ \t]+IN[ \t]+A[ \t]+[0-9.]+"
     if re.search(label_pat, zone, flags=re.M):
         zone = re.sub(label_pat, f"{label}  IN A {ip}", zone, flags=re.M)
     else:
         zone += ("" if zone.endswith("\n") else "\n") + f"{label}  IN A {ip}\n"
-    with open(path,"w") as f: f.write(zone)
+    with open(path, "w") as f:
+        f.write(zone)
 
-def set_multi_a_records(path: str, label: str, ips: List[str]):
-    with open(path,"r") as f: zone = f.read()
+
+def set_multi_a_records(path: str, label: str, ips: list[str]) -> None:
+    with open(path) as f:
+        zone = f.read()
     zone = bump_serial(zone)
     block = "\n".join([f"{label}  IN A {ip}" for ip in ips])
-    zone = re.sub(rf"^[ \t]*{re.escape(label)}[ \t]+IN[ \t]+A[ \t]+[0-9.]+.*\n?", "", zone, flags=re.M)
+    zone = re.sub(
+        rf"^[ \t]*{re.escape(label)}[ \t]+IN[ \t]+A[ \t]+[0-9.]+.*\n?", "", zone, flags=re.M
+    )
     zone += ("" if zone.endswith("\n") else "\n") + block + "\n"
-    with open(path,"w") as f: f.write(zone)
+    with open(path, "w") as f:
+        f.write(zone)
 
-def write_flux_agents(network_name: str, ips: List[str]):
+
+def write_flux_agents(network_name: str, ips: list[str]) -> str:
     """
     Ensure dns_config/flux_agents_<net>.txt is a regular file.
     If a directory exists at that path (accidentally created), move it aside.
@@ -66,22 +88,23 @@ def write_flux_agents(network_name: str, ips: List[str]):
         backup = f"{path}.backup_{int(time.time())}"
         try:
             os.rename(path, backup)
-        except Exception as e:
-            raise IOError(
+        except Exception as exc:
+            raise OSError(
                 f"Cannot prepare flux agents file. A directory exists at '{path}' "
-                f"and could not be moved aside: {e}"
-            )
+                f"and could not be moved aside: {exc}"
+            ) from exc
 
     with open(path, "w") as f:
         f.write("\n".join(ips) + ("\n" if ips else ""))
     return path
 
-def set_zone_ttl(path: str, ttl: int):
+
+def set_zone_ttl(path: str, ttl: int) -> None:
     """
     Update the $TTL directive at the top of the given zone file.
     Bumps the serial so running BIND instances can notice the change.
     """
-    with open(path, "r") as f:
+    with open(path) as f:
         zone = f.read()
 
     lines = zone.splitlines()

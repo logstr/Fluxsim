@@ -3,13 +3,17 @@ import os, json, time, socket, threading
 from typing import Dict, List, Optional, Any
 from fastapi import FastAPI, Response, HTTPException, Body
 from prometheus_client import (
-    CollectorRegistry, Gauge, Counter, generate_latest, CONTENT_TYPE_LATEST
+    CollectorRegistry,
+    Gauge,
+    Counter,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
 )
 import dns.resolver
 
 REGISTRY_PATH = os.environ.get("FLUXLAB_REGISTRY", "/data/registry.json")
-DNS_CFG_DIR   = os.environ.get("FLUXLAB_DNS_DIR", "/dns_config")
-PROJECT_NAME  = os.environ.get("FLUXLAB_PROJECT", "multi-flux-sim")
+DNS_CFG_DIR = os.environ.get("FLUXLAB_DNS_DIR", "/dns_config")
+PROJECT_NAME = os.environ.get("FLUXLAB_PROJECT", "multi-flux-sim")
 
 app = FastAPI(title="FluxLab Exporter")
 
@@ -18,9 +22,10 @@ app = FastAPI(title="FluxLab Exporter")
 # -------------------------
 LOCK = threading.Lock()
 EVENTS_TOTAL = {"probe": 0, "signal": 0, "query": 0}
-LAST_PROBE: Dict[str, Dict[str, Any]] = {}   # domain -> {ttl, answers, ts}
+LAST_PROBE: Dict[str, Dict[str, Any]] = {}  # domain -> {ttl, answers, ts}
 LAST_SIGNAL: Dict[str, Dict[str, Any]] = {}  # domain -> {ttl, ts, source}
-DOMAIN_COUNTS: Dict[str, int] = {}           # domain -> total events seen
+DOMAIN_COUNTS: Dict[str, int] = {}  # domain -> total events seen
+
 
 def _load_registry() -> Dict:
     try:
@@ -28,6 +33,7 @@ def _load_registry() -> Dict:
             return json.load(f)
     except Exception:
         return {"updated_at": 0, "networks": {}}
+
 
 def _read_flux_agents(net: str) -> List[str]:
     p = os.path.join(DNS_CFG_DIR, f"flux_agents_{net}.txt")
@@ -37,7 +43,8 @@ def _read_flux_agents(net: str) -> List[str]:
     except Exception:
         return []
 
-def _dig(host: str, nameserver: Optional[str]=None) -> List[str]:
+
+def _dig(host: str, nameserver: Optional[str] = None) -> List[str]:
     if not host:
         return []
     try:
@@ -49,7 +56,8 @@ def _dig(host: str, nameserver: Optional[str]=None) -> List[str]:
     except Exception:
         return []
 
-def _probe_http(hostport: str, timeout: float=2.0) -> bool:
+
+def _probe_http(hostport: str, timeout: float = 2.0) -> bool:
     try:
         host, port = hostport.split(":")
         with socket.create_connection((host, int(port)), timeout=timeout) as s:
@@ -60,12 +68,14 @@ def _probe_http(hostport: str, timeout: float=2.0) -> bool:
     except Exception:
         return False
 
+
 # -------------------------
 # Health / Status
 # -------------------------
 @app.get("/health")
 def health():
     return {"ok": True, "project": PROJECT_NAME}
+
 
 @app.get("/status")
 def status():
@@ -77,6 +87,7 @@ def status():
             "last_signal_examples": dict(list(LAST_SIGNAL.items())[:5]),
         }
 
+
 # -------------------------
 # Ingest endpoints (agents call these)
 # -------------------------
@@ -85,6 +96,7 @@ def _safe_int(v):
         return int(v) if v is not None else None
     except Exception:
         return None
+
 
 @app.post("/ingest/probe")
 def ingest_probe(payload: Dict[str, Any] = Body(...)):
@@ -110,6 +122,7 @@ def ingest_probe(payload: Dict[str, Any] = Body(...)):
 
     return {"ok": True}
 
+
 @app.post("/ingest/signal")
 def ingest_signal(payload: Dict[str, Any] = Body(...)):
     """
@@ -134,6 +147,7 @@ def ingest_signal(payload: Dict[str, Any] = Body(...)):
 
     return {"ok": True}
 
+
 # -------------------------
 # Metrics
 # -------------------------
@@ -142,28 +156,54 @@ def metrics():
     reg = CollectorRegistry()
 
     # existing metrics
-    up          = Gauge("fluxlab_network_up", "Network scrape OK (exporter viewpoint)", ["net"], registry=reg)
-    dns_up      = Gauge("fluxlab_dns_up", "DNS resolution succeeded", ["net","fqdn"], registry=reg)
-    dns_answers = Gauge("fluxlab_dns_answers", "Count of A answers", ["net","fqdn"], registry=reg)
-    flux_agents = Gauge("fluxlab_flux_agents", "Configured flux agent IPs in file", ["net"], registry=reg)
-    cdn_edges   = Gauge("fluxlab_cdn_edges", "Configured CDN edges (size)", ["net"], registry=reg)
-    lb_workers  = Gauge("fluxlab_lb_workers", "Configured LB workers (size)", ["net"], registry=reg)
-    http_up     = Gauge("fluxlab_http_up", "HTTP/TCP check to service (LB or first edge)", ["net","target"], registry=reg)
-    ttl_hint    = Gauge("fluxlab_dns_ttl_hint", "TTL used in zone (seconds) if known", ["net"], registry=reg)
-    scrape_ts   = Gauge("fluxlab_scrape_timestamp", "Exporter scrape unix time", registry=reg)
+    up = Gauge(
+        "fluxlab_network_up", "Network scrape OK (exporter viewpoint)", ["net"], registry=reg
+    )
+    dns_up = Gauge("fluxlab_dns_up", "DNS resolution succeeded", ["net", "fqdn"], registry=reg)
+    dns_answers = Gauge("fluxlab_dns_answers", "Count of A answers", ["net", "fqdn"], registry=reg)
+    flux_agents = Gauge(
+        "fluxlab_flux_agents", "Configured flux agent IPs in file", ["net"], registry=reg
+    )
+    cdn_edges = Gauge("fluxlab_cdn_edges", "Configured CDN edges (size)", ["net"], registry=reg)
+    lb_workers = Gauge("fluxlab_lb_workers", "Configured LB workers (size)", ["net"], registry=reg)
+    http_up = Gauge(
+        "fluxlab_http_up",
+        "HTTP/TCP check to service (LB or first edge)",
+        ["net", "target"],
+        registry=reg,
+    )
+    ttl_hint = Gauge(
+        "fluxlab_dns_ttl_hint", "TTL used in zone (seconds) if known", ["net"], registry=reg
+    )
+    scrape_ts = Gauge("fluxlab_scrape_timestamp", "Exporter scrape unix time", registry=reg)
 
     # NEW: ingest-derived metrics
-    events_total = Counter("fluxlab_events_total", "Total ingested events", ["source"], registry=reg)
-    domains_tracked = Gauge("fluxlab_domains_tracked", "Number of domains with any activity", registry=reg)
-    domain_last_ttl = Gauge("fluxlab_domain_last_ttl", "Last seen TTL for domain", ["source","domain"], registry=reg)
-    domain_last_seen = Gauge("fluxlab_domain_last_seen", "Last seen unix ts for domain", ["source","domain"], registry=reg)
-    domain_event_count = Gauge("fluxlab_domain_events", "Total events seen for domain", ["domain"], registry=reg)
+    events_total = Counter(
+        "fluxlab_events_total", "Total ingested events", ["source"], registry=reg
+    )
+    domains_tracked = Gauge(
+        "fluxlab_domains_tracked", "Number of domains with any activity", registry=reg
+    )
+    domain_last_ttl = Gauge(
+        "fluxlab_domain_last_ttl", "Last seen TTL for domain", ["source", "domain"], registry=reg
+    )
+    domain_last_seen = Gauge(
+        "fluxlab_domain_last_seen",
+        "Last seen unix ts for domain",
+        ["source", "domain"],
+        registry=reg,
+    )
+    domain_event_count = Gauge(
+        "fluxlab_domain_events", "Total events seen for domain", ["domain"], registry=reg
+    )
 
     # export ingest state
     with LOCK:
         # counters
-        for src in ("probe","signal","query"):
-            events_total.labels(source=src).inc(EVENTS_TOTAL.get(src, 0))  # inc by total since process start
+        for src in ("probe", "signal", "query"):
+            events_total.labels(source=src).inc(
+                EVENTS_TOTAL.get(src, 0)
+            )  # inc by total since process start
 
         domains_tracked.set(len(DOMAIN_COUNTS))
         # per-domain gauges from last seen
@@ -186,10 +226,10 @@ def metrics():
     now = time.time()
 
     for name, meta in nets.items():
-        fqdn  = meta.get("fqdn")
-        kind  = (meta.get("kind") or "").lower()
+        fqdn = meta.get("fqdn")
+        kind = (meta.get("kind") or "").lower()
         dns_ip = meta.get("dns_ip")
-        size  = int(meta.get("size") or 1)
+        size = int(meta.get("size") or 1)
 
         # TTL hint via $TTL header if present
         ttl = None
@@ -199,7 +239,8 @@ def metrics():
                 for ln in f:
                     ln = ln.strip()
                     if ln.startswith("$TTL"):
-                        ttl = int(ln.split()[1]); break
+                        ttl = int(ln.split()[1])
+                        break
         except Exception:
             pass
         if ttl is not None:

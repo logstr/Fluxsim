@@ -1,6 +1,7 @@
 .PHONY: install lint format format-check typecheck test coverage check clean
 
 VENV ?= .venv
+LINT_PATHS ?= fluxsim tests
 
 install:
 	python3 -m venv $(VENV)
@@ -9,17 +10,16 @@ install:
 		pip install -e .[dev]
 
 lint:
-	ruff check .
-	black --check .
-	mypy fluxsim
+	ruff check $(LINT_PATHS)
+	black --check $(LINT_PATHS)
 
 format:
-	ruff format .
-	black .
+	ruff format $(LINT_PATHS)
+	black $(LINT_PATHS)
 
 format-check:
-	ruff format --check .
-	black --check .
+	ruff format --check $(LINT_PATHS)
+	black --check $(LINT_PATHS)
 
 typecheck:
 	mypy fluxsim

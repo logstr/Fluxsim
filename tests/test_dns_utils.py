@@ -1,4 +1,3 @@
-import os
 import re
 from pathlib import Path
 
@@ -36,9 +35,7 @@ def test_write_zone_file_creates_expected_content():
 
 
 def test_set_single_a_record_updates_existing_entry():
-    path = Path(
-        dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60)
-    )
+    path = Path(dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60))
     original = _read(path)
     original_serial = re.search(dns_utils.SERIAL_LINE, original, flags=re.M).group(1)
 
@@ -51,20 +48,14 @@ def test_set_single_a_record_updates_existing_entry():
 
 
 def test_set_single_a_record_appends_when_missing_label():
-    path = Path(
-        dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60)
-    )
+    path = Path(dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60))
     dns_utils.set_single_a_record(str(path), "newlabel", "192.168.1.1")
     assert "newlabel  IN A 192.168.1.1" in _read(path)
 
 
 def test_set_multi_a_records_replaces_block():
-    path = Path(
-        dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60)
-    )
-    dns_utils.set_multi_a_records(
-        str(path), "demo", ["10.0.0.1", "10.0.0.2", "10.0.0.3"]
-    )
+    path = Path(dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60))
+    dns_utils.set_multi_a_records(str(path), "demo", ["10.0.0.1", "10.0.0.2", "10.0.0.3"])
     content = _read(path)
     lines = [line for line in content.splitlines() if line.startswith("demo")]
     assert lines == [
@@ -89,9 +80,7 @@ def test_write_flux_agents_replaces_directory_with_file(monkeypatch, tmp_path):
 
 
 def test_set_zone_ttl_updates_directive_and_bumps_serial():
-    path = Path(
-        dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60)
-    )
+    path = Path(dns_utils.write_zone_file("demo", "172.60.0.53", "demo.sim.local", 60, 60))
     before = _read(path)
     before_serial = int(re.search(dns_utils.SERIAL_LINE, before, flags=re.M).group(1))
 

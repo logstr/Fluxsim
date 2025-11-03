@@ -1,4 +1,3 @@
-import pytest
 import subprocess
 
 from fluxsim import docker_utils

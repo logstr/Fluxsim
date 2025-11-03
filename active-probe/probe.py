@@ -7,8 +7,8 @@ import requests
 
 # ---- config via env (with sane defaults) ----
 BROKERS = os.getenv("KAFKA_BROKERS", "redpanda:9092")
-TOPIC   = os.getenv("KAFKA_TOPIC_FF_PROBES", "ff.probes")
-CORE    = os.getenv("CORE_HOST", "http://core:8000")  # set to http://fluxlab_exporter:9108 in compose
+TOPIC = os.getenv("KAFKA_TOPIC_FF_PROBES", "ff.probes")
+CORE = os.getenv("CORE_HOST", "http://core:8000")  # set to http://fluxlab_exporter:9108 in compose
 PROBE_DNS = os.getenv("PROBE_DNS")  # e.g., "172.20.0.53"
 PROBE_INTERVAL = float(os.getenv("PROBE_INTERVAL", "3"))
 KAFKA_WAIT = float(os.getenv("KAFKA_WAIT", "60"))  # seconds to wait for broker readiness
@@ -22,12 +22,14 @@ ENV_DOMAINS = os.getenv("PROBE_DOMAINS")
 if ENV_DOMAINS:
     DOMAINS = [d.strip() for d in ENV_DOMAINS.split(",") if d.strip()]
 
+
 def _tcp_ok(host: str, port: int, timeout: float = 2.0) -> bool:
     try:
         with socket.create_connection((host, port), timeout=timeout):
             return True
     except Exception:
         return False
+
 
 def wait_for_kafka(brokers: str, timeout_s: float = 60.0) -> None:
     """
@@ -67,10 +69,12 @@ def wait_for_kafka(brokers: str, timeout_s: float = 60.0) -> None:
 
     raise SystemExit("[active-probe] Kafka not ready within wait window")
 
+
 # ---- initialize DNS resolver ----
 resolver = dns.resolver.Resolver()
 if PROBE_DNS:
     resolver.nameservers = [PROBE_DNS]
+
 
 def probe_once(domain: str, producer: KafkaProducer):
     ts = time.time()
@@ -95,6 +99,7 @@ def probe_once(domain: str, producer: KafkaProducer):
         requests.post(f"{CORE}/ingest/probe", json=event, timeout=1.5)
     except Exception:
         pass
+
 
 if __name__ == "__main__":
     # Wait for Kafka/Redpanda to be ready before creating the producer
