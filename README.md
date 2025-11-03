@@ -172,12 +172,14 @@ This makes it easy to test lookups from the host or external tools without enter
 ## Quality & Coverage
 
 - **Lint & type-check**: `ruff check .`, `ruff format --check .`, `black --check .`, and `mypy fluxsim`
-  (mirrors the CI workflow).
+  (mirrors the CI workflow). Alternatively, run `make lint`.
+- **Auto-formatting**: `ruff format .` and `black .` or use `make format`.
 - **Unit tests with coverage**:
 
   ```bash
   pytest --cov=fluxsim --cov-report=xml --cov-report=term-missing
   ```
+  or `make coverage`.
 
   This generates `coverage.xml` for upload to Codecov or another coverage tracker. Add the `CODECOV_TOKEN`
   repository secret (for private repos) before enabling uploads.
@@ -191,8 +193,8 @@ environment setup, and review tips. A quick-start for local development:
 ```bash
 pip install -e .[dev]
 pre-commit install
-pre-commit run --all-files
-pytest --cov=fluxsim --cov-report=term
+make lint
+make test
 ```
 
 GitHub Actions (`.github/workflows/ci.yml`) repeats these checks on every push and pull request.
