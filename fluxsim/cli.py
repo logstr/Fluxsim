@@ -1,5 +1,5 @@
 # fluxsim/cli.py
-from typing import Any
+from typing import Any, cast
 
 from riposte import Riposte
 
@@ -21,7 +21,7 @@ Homepage   : https://www.logstr.io - @lesliexyz
 
 # We print the banner ourselves to avoid duplicates across Riposte versions.
 cli = Riposte(prompt="FluxLab:~ ", banner=BANNER)
-_HELP = _commands.register(cli)  # rich metadata
+_HELP = cast(dict[str, dict[str, Any]], _commands.register(cli))  # rich metadata
 
 
 # ---- base utilities ----
