@@ -1,7 +1,7 @@
 .PHONY: install lint format format-check typecheck test coverage check clean
 
 VENV ?= .venv
-LINT_PATHS ?= fluxsim tests
+LINT_PATHS ?= fluxsim tests docs
 
 install:
 	python3 -m venv $(VENV)
