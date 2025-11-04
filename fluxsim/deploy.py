@@ -1,3 +1,5 @@
+"""Deployment orchestration for FluxSim."""
+
 import os
 import subprocess
 import time
@@ -24,6 +26,8 @@ from .state import NETWORKS, clear_state
 
 
 def _project_net(name: str) -> str:
+    """Return the canonical docker network name for ``name`` within this project."""
+
     return f"{PROJECT_NAME}_{name}_net"
 
 
@@ -100,6 +104,8 @@ def _write_client_resolv(cli: Any | None = None) -> str:
 
 
 def _service_ips(service_name: str, network_name: str) -> list[str]:
+    """Inspect docker for the IPv4 addresses bound to ``service_name`` on ``network_name``."""
+
     ids = service_container_ids(service_name, COMPOSE_FILE)
     docker_net = _project_net(network_name)
     ips: list[str] = []
@@ -125,7 +131,7 @@ def _service_ips(service_name: str, network_name: str) -> list[str]:
 
 
 def _compose_validate(cli: Any | None, compose_file: str) -> bool:
-    """Run 'docker compose config' and pretty-print the first error if any."""
+    """Run ``docker compose config`` and pretty-print the first error if any."""
     proc = subprocess.run(
         ["docker", "compose", "-f", compose_file, "config"], capture_output=True, text=True
     )
@@ -143,6 +149,8 @@ def _compose_validate(cli: Any | None, compose_file: str) -> bool:
 
 
 def _wait_ips(service: str, net: str, expect_at_least=1, timeout=60, poll=2) -> list[str]:
+    """Poll service IPs until the expected count is reached or timeout elapses."""
+
     deadline = time.time() + timeout
     last: list[str] = []
     while time.time() < deadline:
@@ -208,10 +216,7 @@ def update_zone_ttl(name: str, ttl: int, cli: Any | None = None) -> bool:
 
 
 def scale_flux_agents(name: str, size: int, cli: Any | None = None) -> bool:
-    """
-    Scale the running proxy_agent_<name> service to the requested size.
-    Afterwards refreshes the flux agents list and bumps DNS.
-    """
+    """Scale the running ``proxy_agent_<name>`` service and refresh DNS state."""
     if size < 1:
         if cli:
             _warn(cli, f"{name}: size must be >= 1")
@@ -236,9 +241,7 @@ def scale_flux_agents(name: str, size: int, cli: Any | None = None) -> bool:
 
 
 def scale_lb_workers(name: str, size: int, cli: Any | None = None) -> bool:
-    """
-    Scale the worker_<name> service backing the load balancer.
-    """
+    """Scale the ``worker_<name>`` service backing the load balancer."""
     if size < 1:
         if cli:
             _warn(cli, f"{name}: size must be >= 1")
@@ -261,9 +264,7 @@ def scale_lb_workers(name: str, size: int, cli: Any | None = None) -> bool:
 
 
 def scale_cdn_edges(name: str, size: int, cli: Any | None = None) -> bool:
-    """
-    Scale the cdn_edge_<name> service and refresh multi-A records.
-    """
+    """Scale the ``cdn_edge_<name>`` service and rewrite multi-A DNS records."""
     if size < 1:
         if cli:
             _warn(cli, f"{name}: size must be >= 1")
@@ -321,7 +322,7 @@ def _err(cli, line: str):
         print("[-] " + line)
 
 
-def deploy(cli: Any | None = None):
+def deploy(cli: Any | None = None) -> None:
     if len(NETWORKS) == 0:
         if cli:
             cli.print(Palette.YELLOW.format("WARNING: No networks registered."))
@@ -399,7 +400,7 @@ def deploy(cli: Any | None = None):
     _ok(cli, "\nDeployment complete.")
 
 
-def stop_and_clean(cli: Any | None = None):
+def stop_and_clean(cli: Any | None = None) -> None:
     _hdr(cli, "\n[Stopping]")
     dcompose(["down", "-v", "--remove-orphans"], COMPOSE_FILE, check=False)
     clear_state()

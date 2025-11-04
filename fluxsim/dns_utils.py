@@ -1,3 +1,5 @@
+"""Helpers for generating and mutating BIND zone files used by FluxSim."""
+
 import os
 import re
 import time
@@ -10,6 +12,7 @@ SERIAL_LINE = r"^\s*(\d+)\s*; Serial \(dynamically generated\)\s*$"
 def write_zone_file(
     network_name: str, dns_ip: str, domain: str, subnet_octet: int, ttl: int
 ) -> str:
+    """Create a base zone file for a FluxSim network and return its path."""
     serial = time.strftime("%Y%m%d") + "01"
     zone_root = "sim.local."
     label = network_name
@@ -35,6 +38,7 @@ ns      IN A {dns_ip}
 
 
 def bump_serial(zone: str) -> str:
+    """Increment the zone serial number (YYYYMMDDNN) inside a zone text."""
     m = re.search(SERIAL_LINE, zone, flags=re.M)
     if m:
         cur = int(m.group(1))
@@ -50,6 +54,7 @@ def bump_serial(zone: str) -> str:
 
 
 def set_single_a_record(path: str, label: str, ip: str) -> None:
+    """Update or append a single A record for ``label``."""
     with open(path) as f:
         zone = f.read()
     zone = bump_serial(zone)
@@ -63,6 +68,7 @@ def set_single_a_record(path: str, label: str, ip: str) -> None:
 
 
 def set_multi_a_records(path: str, label: str, ips: list[str]) -> None:
+    """Replace all A records for ``label`` with the provided ``ips``."""
     with open(path) as f:
         zone = f.read()
     zone = bump_serial(zone)
@@ -76,10 +82,9 @@ def set_multi_a_records(path: str, label: str, ips: list[str]) -> None:
 
 
 def write_flux_agents(network_name: str, ips: list[str]) -> str:
-    """
-    Ensure dns_config/flux_agents_<net>.txt is a regular file.
-    If a directory exists at that path (accidentally created), move it aside.
-    """
+    """Persist proxy agent IPs to ``dns_config/flux_agents_<net>.txt``."""
+
+    # Ensure dns_config/flux_agents_<net>.txt is a regular file.
     path = FLUX_IPS_FILE_PATH_TEMPLATE.format(network_name=network_name)
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
@@ -100,10 +105,7 @@ def write_flux_agents(network_name: str, ips: list[str]) -> str:
 
 
 def set_zone_ttl(path: str, ttl: int) -> None:
-    """
-    Update the $TTL directive at the top of the given zone file.
-    Bumps the serial so running BIND instances can notice the change.
-    """
+    """Rewrite the ``$TTL`` directive in a zone file and bump its serial."""
     with open(path) as f:
         zone = f.read()
 

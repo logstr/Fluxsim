@@ -1,4 +1,4 @@
-.PHONY: install lint format format-check typecheck test coverage check clean
+.PHONY: install lint format format-check typecheck test coverage check docs clean
 
 VENV ?= .venv
 LINT_PATHS ?= fluxsim tests docs
@@ -31,6 +31,9 @@ coverage:
 	pytest --cov=fluxsim --cov-report=term --cov-report=xml
 
 check: lint test
+
+docs:
+	$(MAKE) -C docs html
 
 clean:
 	rm -rf .pytest_cache .coverage coverage.xml

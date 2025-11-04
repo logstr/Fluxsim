@@ -1,7 +1,20 @@
 # fluxsim/commands.py
+"""Command registration for the FluxSim CLI.
+
+`register` is invoked by :mod:`fluxsim.cli` to populate the interactive shell with
+project-specific commands. Each subcommand interacts with shared state stored in
+:mod:`fluxsim.state`, orchestrates docker-compose via :mod:`fluxsim.deploy`, and updates the
+monitoring registry so Grafana/Prometheus stay in sync.
+
+The command set is grouped into lifecycle management, configuration tuning, and client helpers.
+Docstrings are intentionally verbose to help new contributors navigate the API in combination with
+the generated Sphinx documentation (:doc:`../cli`).
+"""
+
 from __future__ import annotations
 
 import subprocess
+from collections.abc import Callable
 
 from riposte.printer import Palette
 
@@ -9,18 +22,15 @@ from .config import COMPOSE_FILE, MAX_AGENTS
 from .docker_utils import compose as dcompose
 from .state import BASE_SUBNET_OCTET, CLIENT_RESOLV, NETWORKS, Net, write_registry
 
-# Structured help registry: cmd -> metadata
+# Structured help registry: cmd -> metadata. Populated during `register`.
 HELP: dict[str, dict[str, object]] = {}
 
 
-def register(cli):
-    """
-    Register all commands on the given Riposte instance.
-    Returns the HELP registry for the CLI to render detailed help.
-    """
+def register(cli) -> dict[str, dict[str, object]]:
+    """Attach FluxSim commands to the provided riposte ``cli`` instance."""
 
-    # ---------- helpers ----------
-    def _get_next_subnet():
+    def _get_next_subnet() -> int:
+        """Return the next unused 172.x.0.0/24 subnet octet."""
         global BASE_SUBNET_OCTET
         used = {n.subnet for n in NETWORKS.values()}
         while True:
@@ -30,18 +40,16 @@ def register(cli):
             BASE_SUBNET_OCTET += 1
             if BASE_SUBNET_OCTET > 255:
                 raise RuntimeError("Exhausted 172.x.0.0/24 ranges")
-        # ---------- pretty printing helpers ----------
+
+    # ---------- pretty printing helpers ----------
 
     def _hdr(text: str) -> str:
-        # Bold cyan header line
         return Palette.BOLD.format(Palette.CYAN.format(text))
 
-    def _ok(line: str):
-        # Multiline “success” style: always show [+] and green text
+    def _ok(line: str) -> None:
         cli.print(Palette.GREEN.format(f"[+] {line}"))
 
     def _kv(k: str, v: str) -> str:
-        # dim the key, normal value
         return f"{Palette.GREY.format(k)}{v}"
 
     def _add(
@@ -51,7 +59,7 @@ def register(cli):
         long_desc: str = "",
         examples: list[str] | None = None,
         group: str = "General",
-    ):
+    ) -> Callable:
         """Decorator factory: attach command + store rich help metadata."""
         HELP[name] = {
             "name": name,
@@ -66,10 +74,10 @@ def register(cli):
     # Import late to avoid cycles
     from .deploy import (  # noqa: I001
         deploy,
-        stop_and_clean,
+        scale_cdn_edges,
         scale_flux_agents,
         scale_lb_workers,
-        scale_cdn_edges,
+        stop_and_clean,
         update_zone_ttl,
     )
 
@@ -85,7 +93,9 @@ def register(cli):
         examples=["deploy"],
         group="Lifecycle",
     )
-    def cmd_deploy():
+    def cmd_deploy() -> None:
+        """Render compose, start services, and show updated network status."""
+        """Render compose file, start services, and persist registry metadata."""
         deploy(cli)  # pass cli for pretty prints
         write_registry(NETWORKS)
         cmd_status()
@@ -98,7 +108,8 @@ def register(cli):
         examples=["stop"],
         group="Lifecycle",
     )
-    def cmd_stop():
+    def cmd_stop() -> None:
+        """Tear down the docker-compose stack and update the registry."""
         stop_and_clean(cli)  # pass cli for pretty prints
         write_registry(NETWORKS)
         cli.success("Stopped.")
@@ -111,7 +122,8 @@ def register(cli):
         examples=["status"],
         group="Inspect",
     )
-    def cmd_status():
+    def cmd_status() -> None:
+        """Print a human-friendly summary of configured networks."""
         if not NETWORKS:
             cli.print(Palette.YELLOW.format("No networks configured."))
             return
@@ -158,7 +170,8 @@ def register(cli):
         desc="Create a simple origin-only network.",
         usage="add_normal_network <name>",
     )
-    def add_normal_network(name: str):
+    def add_normal_network(name: str) -> None:
+        """Register a new origin-only network in state and display status."""
         if name in NETWORKS:
             cli.error("Already exists.")
             return
@@ -178,7 +191,8 @@ def register(cli):
         desc="Create a fast-flux network (proxy agents rotate via DNS).",
         usage="add_flux_network <name>",
     )
-    def add_flux_network(name: str):
+    def add_flux_network(name: str) -> None:
+        """Register a new fast-flux network template."""
         if name in NETWORKS:
             cli.error("Already exists.")
             return
@@ -198,7 +212,8 @@ def register(cli):
         desc="Create a load-balanced network (LB + N workers).",
         usage="add_lb_network <name>",
     )
-    def add_lb_network(name: str):
+    def add_lb_network(name: str) -> None:
+        """Register a new load-balancer network template."""
         if name in NETWORKS:
             cli.error("Already exists.")
             return
@@ -237,7 +252,8 @@ def register(cli):
     @_add(
         "remove_network", desc="Delete a network from the catalog.", usage="remove_network <name>"
     )
-    def remove_network(name: str):
+    def remove_network(name: str) -> None:
+        """Remove a network definition from the catalog."""
         if name not in NETWORKS:
             cli.error("Unknown network.")
             return
@@ -256,7 +272,8 @@ def register(cli):
         examples=["set_flux_n fluxy 3"],
         group="Tuning",
     )
-    def set_flux_n(name: str, n_str: str):
+    def set_flux_n(name: str, n_str: str) -> None:
+        """Schedule a flux network to run with ``n`` proxy agents on next deploy."""
         if name not in NETWORKS or NETWORKS[name].kind != "flux":
             cli.error("Not a flux network.")
             return
@@ -277,7 +294,8 @@ def register(cli):
         examples=["set_worker_n lbn 4"],
         group="Tuning",
     )
-    def set_worker_n(name: str, n_str: str):
+    def set_worker_n(name: str, n_str: str) -> None:
+        """Schedule a load-balancer network to run with ``n`` workers."""
         if name not in NETWORKS or NETWORKS[name].kind != "lb":
             cli.error("Not a LB network.")
             return
@@ -298,7 +316,8 @@ def register(cli):
         examples=["set_cdn_n cdn1 5"],
         group="Tuning",
     )
-    def set_cdn_n(name: str, n_str: str):
+    def set_cdn_n(name: str, n_str: str) -> None:
+        """Schedule a CDN network to publish ``n`` edge addresses."""
         if name not in NETWORKS or NETWORKS[name].kind != "cdn":
             cli.error("Not a CDN network.")
             return
@@ -319,7 +338,8 @@ def register(cli):
         examples=["set_ttl fluxy 30"],
         group="Tuning",
     )
-    def set_ttl(net: str, sec: str):
+    def set_ttl(net: str, sec: str) -> None:
+        """Update the stored TTL for ``net`` (applied on next deploy)."""
         if net not in NETWORKS:
             cli.error("Unknown net")
             return
@@ -338,7 +358,8 @@ def register(cli):
         examples=["set_flux_interval fluxy 5"],
         group="Tuning",
     )
-    def set_flux_interval(net: str, sec: str):
+    def set_flux_interval(net: str, sec: str) -> None:
+        """Update rotation interval for flux DNS updates (seconds)."""
         if net not in NETWORKS or NETWORKS[net].kind != "flux":
             cli.error("Not a flux net")
             return
@@ -357,7 +378,8 @@ def register(cli):
         examples=["set_flux_selector fluxy random", "set_flux_selector fluxy roundrobin"],
         group="Tuning",
     )
-    def set_flux_selector(net: str, sel: str):
+    def set_flux_selector(net: str, sel: str) -> None:
+        """Choose how the flux DNS updater orders proxy agents."""
         if net not in NETWORKS or NETWORKS[net].kind != "flux":
             cli.error("Not a flux net")
             return
@@ -375,7 +397,8 @@ def register(cli):
         examples=["set_lb_algo lbn ip_hash", "set_lb_algo lbn round_robin"],
         group="Tuning",
     )
-    def set_lb_algo(net: str, algo: str):
+    def set_lb_algo(net: str, algo: str) -> None:
+        """Toggle the NGINX load-balancer algorithm."""
         if net not in NETWORKS or NETWORKS[net].kind != "lb":
             cli.error("Not an LB net")
             return
@@ -415,7 +438,8 @@ def register(cli):
         group="Live Ops",
         examples=["flux_add_agent fluxy"],
     )
-    def flux_add_agent(name: str):
+    def flux_add_agent(name: str) -> None:
+        """Immediately scale up the proxy agent pool for a flux network."""
         if name not in NETWORKS or NETWORKS[name].kind != "flux":
             cli.error("Not a flux network.")
             return
@@ -437,7 +461,8 @@ def register(cli):
         group="Live Ops",
         examples=["flux_remove_agent fluxy"],
     )
-    def flux_remove_agent(name: str):
+    def flux_remove_agent(name: str) -> None:
+        """Scale down the proxy agent pool for a flux network."""
         if name not in NETWORKS or NETWORKS[name].kind != "flux":
             cli.error("Not a flux network.")
             return
@@ -459,7 +484,8 @@ def register(cli):
         group="Live Ops",
         examples=["lb_add_worker lbn"],
     )
-    def lb_add_worker(name: str):
+    def lb_add_worker(name: str) -> None:
+        """Scale up the worker pool backing a load balancer."""
         if name not in NETWORKS or NETWORKS[name].kind != "lb":
             cli.error("Not a load balancer network.")
             return
@@ -481,7 +507,8 @@ def register(cli):
         group="Live Ops",
         examples=["lb_remove_worker lbn"],
     )
-    def lb_remove_worker(name: str):
+    def lb_remove_worker(name: str) -> None:
+        """Scale down the worker pool backing a load balancer."""
         if name not in NETWORKS or NETWORKS[name].kind != "lb":
             cli.error("Not a load balancer network.")
             return
@@ -503,7 +530,8 @@ def register(cli):
         group="Live Ops",
         examples=["cdn_add_edge cdn1"],
     )
-    def cdn_add_edge(name: str):
+    def cdn_add_edge(name: str) -> None:
+        """Add one CDN edge container and refresh DNS."""
         if name not in NETWORKS or NETWORKS[name].kind != "cdn":
             cli.error("Not a CDN network.")
             return
@@ -525,7 +553,8 @@ def register(cli):
         group="Live Ops",
         examples=["cdn_remove_edge cdn1"],
     )
-    def cdn_remove_edge(name: str):
+    def cdn_remove_edge(name: str) -> None:
+        """Remove one CDN edge container and refresh DNS."""
         if name not in NETWORKS or NETWORKS[name].kind != "cdn":
             cli.error("Not a CDN network.")
             return
@@ -593,7 +622,8 @@ by IP, or provide an explicit comma-separated order of network names.
         examples=["client_browse fluxy.sim.local", "client_browse http://172.60.0.80"],
         group="Client",
     )
-    def client_browse(*parts: str):
+    def client_browse(*parts: str) -> None:
+        """Fetch a URL inside dns_client_test and print the rendered output."""
         if not parts:
             cli.error("Usage: client_browse <url>")
             return

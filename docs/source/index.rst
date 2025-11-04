@@ -1,22 +1,21 @@
-Welcome to Lumache's documentation!
-===================================
+FluxSim Documentation
+======================
 
-**Lumache** (/lu'make/) is a Python library for cooks and food lovers
-that creates recipes mixing random ingredients.
-It pulls data from the `Open Food Facts database <https://world.openfoodfacts.org/>`_
-and offers a *simple* and *intuitive* API.
-
-Check out the :doc:`usage` section for further information, including
-how to :ref:`installation` the project.
+FluxSim packages a full DNS fast-flux laboratory into a Docker stack—complete with proxy agents,
+load balancers, CDN-style edges, observability, and a rich command-line interface. This manual
+guides you through installation, CLI fundamentals, topology orchestration, and embedding FluxSim in
+teaching or research pipelines.
 
 .. note::
 
-   This project is under active development.
-
-Contents
---------
+   FluxSim is under active development. Expect rapid iteration while the project stabilises for
+   broader open-source collaboration.
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Contents
 
-   usage
+   overview
+   cli
+   workflows
    api
