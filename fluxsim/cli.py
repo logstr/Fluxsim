@@ -80,7 +80,7 @@ def _print_index():
     groups: dict[str, list[dict[str, Any]]] = {}
     for meta in _HELP.values():
         group_name = str(meta.get("group", "General"))
-        groups.setdefault(group_name, []).append(meta)
+        groups.setdefault(group_name, []).append(dict(meta))
     for group, metas in sorted(groups.items()):
         cli.print(f"\n{group}:")
         for meta in sorted(metas, key=lambda m: str(m["name"])):
