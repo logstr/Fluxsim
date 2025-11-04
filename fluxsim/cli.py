@@ -1,4 +1,6 @@
 # fluxsim/cli.py
+from typing import Any
+
 from riposte import Riposte
 
 from . import commands as _commands
@@ -75,12 +77,13 @@ def _print_topic(name: str):
 def _print_index():
     cli.print("\nCommands:")
     # group by category
-    groups = {}
+    groups: dict[str, list[dict[str, Any]]] = {}
     for meta in _HELP.values():
-        groups.setdefault(meta.get("group", "General"), []).append(meta)
-    for group in sorted(groups):
+        group_name = str(meta.get("group", "General"))
+        groups.setdefault(group_name, []).append(meta)
+    for group, metas in sorted(groups.items()):
         cli.print(f"\n{group}:")
-        for meta in sorted(groups[group], key=lambda m: m["name"]):
+        for meta in sorted(metas, key=lambda m: str(m["name"])):
             cli.print(f"  {meta['name']:<18} {meta['desc']}")
     cli.print("\nTip: type 'help <command>' for details.\n")
 
